@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Usage:
+
 client = APNSProxyClient("tcp://localhost:5556", "01")
 with client:
     token = "b7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
@@ -67,17 +68,17 @@ class APNSProxyClient(object):
             raise ValueError('Too long message')
         if isinstance(message, unicode):
             message = message.encode("utf-8")
+        print(COMMAND_TOKEN + self.application_id + token + message, zmq.SNDMORE)
         self.client.send(COMMAND_TOKEN + self.application_id + token + message, zmq.SNDMORE)
-
-    def result(self):
-        self.client.send(COMMAND_END)
-        ret = self.client.recv()
-        return ret
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type:
             self.close()
             return False
+
+        # Flush all buffered messages
+        self.client.send(COMMAND_END)
+        self.client.recv()
         self.close()
         return True
 
