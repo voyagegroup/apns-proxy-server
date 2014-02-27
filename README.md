@@ -1,6 +1,6 @@
 # APNS-HTTP-Proxy
 
-$B%G%P%$%9%H!<%/%s$r<u$1$F!"(BAPNs$B$KN.$9%5!<%P!<(B
+デバイストークンを受けて、APNsに流すサーバー
 
 ## Requirements
 
@@ -9,25 +9,25 @@
 ## Setup
 
 ```
-# APNs$B$X$N@\B3$KMxMQ$9$k(BSSL$B>ZL@=q$NG[CV(B
+# APNsへの接続に利用するSSL証明書の配置
 cp xxxxx.certs ./certifications/
 cp xxxxx.key ./certifications/
 
-# $B@_Dj%U%!%$%k$N:n@.(B
+# 設定ファイルの作成
 cp settings.template.py settings.py
 vim settings.py
 
-# Python$B4D6-$N9=C[(B
+# Python環境の構築
 make setup
 ```
 
-## $B5/F0(B
+## 起動
 
 ```
 apns-proxy-server.sh start
 ```
 
-## $B3+H/MQ$N%3%^%s%I(B
+## 開発用のコマンド
 
 Command | Description
 --- | ---
