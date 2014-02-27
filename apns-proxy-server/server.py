@@ -11,6 +11,8 @@ APNs Proxy Server
 
 import logging
 import traceback
+import threading
+from Queue import Queue
 
 import zmq
 
@@ -50,13 +52,6 @@ def start(address):
         context.term()
 
 
-def dispatch(message):
-    application_id, token, message = parse_message(message)
-#    logging.info("application_id: %s" % application_id)
-#    logging.info("token: %s" % token)
-#    logging.info("message: %s" % message)
-
-
 def parse_message(message):
     pos = COMMAND_LENGTH
     application_id = message[pos:pos+APPLICATION_ID_LENGTH]
@@ -67,3 +62,41 @@ def parse_message(message):
     pos += DEVICE_TOKEN_LENGTH
     message = message[pos:]
     return (application_id, token, message)
+
+
+task_queues = {}
+
+
+def dispatch(message):
+    application_id, token, message = parse_message(message)
+#    logging.info("application_id: %s" % application_id)
+#    logging.info("token: %s" % token)
+#    logging.info("message: %s" % message)
+    if not application_id in task_queues:
+        thread, q = create_worker(application_id)
+        thread.start()
+        task_queues[application_id] = q
+
+    task_queues[application_id].put({
+        "message": message,
+        "token": token
+    })
+
+
+def create_worker(application_id):
+    logging.info("Create worker for: %s" % application_id)
+    q = Queue()
+    thread = threading.Thread(target=worker, args=(
+        q,
+        application_id
+    ))
+    return (thread, q)
+
+
+def worker(queue, application_id):
+    while True:
+        item = queue.get()
+        logging.info(application_id)
+        logging.info(item.get('message'))
+        logging.info(item.get('token'))
+
