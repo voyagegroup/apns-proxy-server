@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 """
+APNS Proxy Serverのクライアント
+
 Usage:
+    client = APNSProxyClient("tcp://localhost:5556", "01")
+    with client:
+        token = "xxae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
+        msg = u"これはメッセージAです"
+        client.send(token, msg)
 
-client = APNSProxyClient("tcp://localhost:5556", "01")
-with client:
-    token = "b7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
-    msg = u"これはメッセージです"
-    client.send(token, msg)
-
-    ret = client.result()
+        token = "xxae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec2"
+        msg = u"これはメッセージBです"
+        client.send(token, msg)
 """
 
 import zmq
 
+
+RECV_TIMEOUT = 3000  # msec
 
 COMMAND_PING = b'1'
 COMMAND_TOKEN = b'2'
@@ -31,8 +36,6 @@ class APNSProxyClient(object):
         self.address = address
 
         self.context = zmq.Context()
-        self.context.setsockopt(zmq.RCVTIMEO, 3000)
-        self.context.setsockopt(zmq.SNDTIMEO, 3000)
         self.context.setsockopt(zmq.LINGER, 2000)
 
         self.client = self.context.socket(zmq.REQ)
@@ -50,17 +53,23 @@ class APNSProxyClient(object):
         self.client.send(COMMAND_PING)
         poller = zmq.Poller()
         poller.register(self.client, zmq.POLLIN)
-        if poller.poll(2000):
+        if poller.poll(RECV_TIMEOUT):
             ret = self.client.recv()
             if ret != "OK":
                 raise IOError("Invalid server state %s" % ret)
         else:
             self.close()
-            raise IOError("Cannot connect to Server. Timeout!!")
+            raise IOError("Cannot connect to APNs Proxy Server. Timeout!!")
 
     def send(self, token, message):
         """
         デバイストークンの送信
+
+        データフレームは次の構造である
+        - コマンド(1)
+        - アプリケーションID(2)
+        - デバイストークン(64)
+        - メッセージ
         """
         if len(token) != DEVICE_TOKEN_LENGTH:
             raise ValueError('Invalid token length %s' % token)
@@ -68,7 +77,6 @@ class APNSProxyClient(object):
             raise ValueError('Too long message')
         if isinstance(message, unicode):
             message = message.encode("utf-8")
-        print(COMMAND_TOKEN + self.application_id + token + message, zmq.SNDMORE)
         self.client.send(COMMAND_TOKEN + self.application_id + token + message, zmq.SNDMORE)
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -76,10 +84,15 @@ class APNSProxyClient(object):
             self.close()
             return False
 
-        # Flush all buffered messages
+        # バッファに残っているメッセージを流しきる
         self.client.send(COMMAND_END)
-        self.client.recv()
-        self.close()
+        poller = zmq.Poller()
+        poller.register(self.client, zmq.POLLIN)
+        if poller.poll(RECV_TIMEOUT):
+            self.client.recv()
+        else:
+            self.close()
+            raise IOError("Server cannot respond. Some messages may lost.")
         return True
 
     def close(self):
