@@ -1,2 +1,3 @@
+-e git+git@github.com:djacobs/PyAPNs.git#egg=apns
 pyzmq==14.0.1
 wsgiref==0.1.2

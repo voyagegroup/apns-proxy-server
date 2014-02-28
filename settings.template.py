@@ -4,17 +4,28 @@ import logging
 
 LOG_LEVEL = logging.INFO
 
+# クライアントを待ちうけるポート
 BIND_ADDRESS = "tcp://*:5556"
 
-APPLICATIONS = {
-    "app1": {
+# アプリ毎のワーカースレッドの数
+THREAD_NUMS_PER_APPLICATION = 5
+
+# アプリ毎のAPNsの設定
+APPLICATIONS = [
+    {
         "application_id": "14",
-        "cert_file": "hoge.cert",
-        "key_file": "fuga.key"
+        "name": "My App1",
+        "sandbox": False,
+        # ./apns_certsディレクトリに配置した場合
+        "cert_file": "hoge.cert"),
+        "key_file": "fuga.key")
     },
-    "app2": {
+    {
         "application_id": "13",
-        "cert_file": "bar.cert",
-        "key_file": "buz.key"
+        "name": "My App2",
+        "sandbox": False,
+        # 絶対パスで指定する場合
+        "cert_file": "/path/to/certs/apns.cert",
+        "key_file": "/path/to/certs/apns.key"
     }
-}
+]
