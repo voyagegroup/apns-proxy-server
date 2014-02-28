@@ -11,10 +11,10 @@ setup:
 
 
 lint:
-	flake8 apns-proxy-server
+	flake8 apns_proxy_server
 
 run: clean
-	./bin/python -m apns-proxy-server.invoker
+	./bin/python -m apns_proxy_server.invoker
 
 test: clean
 	./bin/nosetests
@@ -23,5 +23,5 @@ live_test: clean
 	./bin/python -m tests.live_test
 
 clean:
-	-rm apns-proxy-server/**/*.pyc
+	-rm apns_proxy_server/**/*.pyc
 	-rm settings.pyc
