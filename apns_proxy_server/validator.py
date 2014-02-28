@@ -17,7 +17,7 @@ def validate_settings(settings):
         if not 'name' in app:
             raise ValueError('name not found in application list')
         if not 'sandbox' in app:
-            raise ValueError('name not found in application list')
+            raise ValueError('sandbox not found in application list')
         if not 'cert_file' in app:
             raise ValueError('cert_file not found in application list')
         if not 'key_file' in app:
