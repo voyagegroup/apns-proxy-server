@@ -18,7 +18,7 @@ def main():
             client.send(token, msg)
 
 
-    client2 = APNSProxyClient(address="tcp://localhost:5556", application_id="15")
+    client2 = APNSProxyClient(address="tcp://localhost:5556", application_id="13")
     with client2:
         print("start send roop 2")
         cnt = 0
