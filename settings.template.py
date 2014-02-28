@@ -16,15 +16,13 @@ APPLICATIONS = [
         "application_id": "14",
         "name": "My App1",
         "sandbox": False,
-        # ./apns_certsディレクトリに配置した場合
-        "cert_file": "hoge.cert"),
-        "key_file": "fuga.key")
+        "cert_file": "hoge.cert",  # Put in the ./apns_certs directory
+        "key_file": "fuga.key"     # Put in the ./apns_certs direcotry
     },
     {
         "application_id": "13",
         "name": "My App2",
         "sandbox": False,
-        # 絶対パスで指定する場合
         "cert_file": "/path/to/certs/apns.cert",
         "key_file": "/path/to/certs/apns.key"
     }
