@@ -16,6 +16,9 @@ lint:
 run: clean
 	./bin/python -m apns-proxy-server.invoker
 
+test: clean
+	./bin/nosetests
+
 live_test: clean
 	./bin/python -m tests.live_test
 
