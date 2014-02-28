@@ -11,6 +11,8 @@ build
 eggs
 parts
 bin
+src
+man
 include
 var
 sdist
