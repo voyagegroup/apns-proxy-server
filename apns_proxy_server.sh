@@ -1,8 +1,20 @@
 #!/bin/bash
 
 app=`basename $0`
-pid=`dirname $0`/run/apns-proxy-server.pid
+pid=`dirname $0`/run/apns_proxy_server.pid
 
+debug() {
+    if [ -f $pid ] && kill -0 `cat $pid` 2>/dev/null; then
+        echo "running already. pid: `cat $pid`";
+        return 1;
+    fi
+
+    cd `dirname $0`
+    ./bin/python -m apns_proxy_server.invoker >> debug.log &
+
+    mkdir -p `dirname $pid`
+    echo $! > $pid
+}
 
 start() {
     if [ -f $pid ] && kill -0 `cat $pid` 2>/dev/null; then
@@ -12,7 +24,7 @@ start() {
 
     cd `dirname $0`
     exec 8> >(/usr/sbin/cronolog -w /var/log/app_preserve/$logdir/%Y/%m/%d/apns_proxy.log)
-    ./bin/python -m apns-proxy-server.invoker 2>&8 1>&8 &
+    ./bin/python -m apns_proxy_server.invoker 2>&8 1>&8 &
 
     mkdir -p `dirname $pid`
     echo $! > $pid
@@ -53,8 +65,11 @@ case "$1" in
   status)
     status
     ;;
+  debug)
+    debug
+    ;;
   *)
-    echo $"Usage: $0 {start|stop|restart|status}"
+    echo $"Usage: $0 {start|stop|restart|status|debug}"
     exit 1
 esac
 
