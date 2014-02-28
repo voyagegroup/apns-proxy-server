@@ -40,3 +40,6 @@ nosetests.xml
 
 # Settings
 settings.py
+
+# pid
+run/*.pid
