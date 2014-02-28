@@ -40,6 +40,8 @@ nosetests.xml
 
 # Settings
 settings.py
+apns_certs/*
+!apns_certs/.gitkeep
 
 # pid
 run/*.pid
