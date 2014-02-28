@@ -7,6 +7,8 @@ help:
 setup:
 	virtualenv . --no-site-packages
 	./bin/pip install -r requirements.txt
+	chmod -R g+w .
+
 
 lint:
 	flake8 apns-proxy-server
