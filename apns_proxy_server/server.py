@@ -3,10 +3,9 @@
 APNs Proxy Server
 
 メッセージングにはZeroMQを使っている、メッセージフレームの構造は次の通り
-------------------------------------------------------------------
-| Command(1) | Application ID(2) | Device Token(64) | Message(n) |
-------------------------------------------------------------------
-括弧内は長さ
+--------------------------------
+| Command(1) | JSON String (n) |
+--------------------------------
 """
 
 import logging
@@ -15,14 +14,12 @@ import threading
 from Queue import Queue
 
 import zmq
+import simplejson as json
 
 import settings
 from . import worker
 
 COMMAND_LENGTH = 1
-APPLICATION_ID_LENGTH = 2
-DEVICE_TOKEN_LENGTH = 64
-
 COMMAND_PING = b'1'
 COMMAND_TOKEN = b'2'
 COMMAND_END = b'3'
@@ -58,22 +55,15 @@ def parse_message(message):
     """
     データフレームから各値を取り出す
     """
-    pos = COMMAND_LENGTH
-    application_id = message[pos:pos+APPLICATION_ID_LENGTH]
-
-    pos += APPLICATION_ID_LENGTH
-    token = message[pos:pos+DEVICE_TOKEN_LENGTH]
-
-    pos += DEVICE_TOKEN_LENGTH
-    message = message[pos:]
-    return (application_id, token, message)
+    return json.loads(message[COMMAND_LENGTH:])
 
 
 def dispatch(message):
     """
-    Queue経由でワーカースレッドにメッセージを渡す
+    ワーカースレッドにメッセージを渡す
     """
-    application_id, token, message = parse_message(message)
+    data = parse_message(message)
+    application_id = data.get('appid')
     if not application_id in task_queues:
         try:
             q = Queue()
@@ -84,10 +74,7 @@ def dispatch(message):
             return
 
     logging.debug("Dispatch to worker for application_id: %s" % application_id)
-    task_queues[application_id].put({
-        "message": message,
-        "token": token
-    })
+    task_queues[application_id].put(data)
 
 
 def create_worker(application_id, task_queue):

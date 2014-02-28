@@ -15,6 +15,7 @@ Usage:
 """
 
 import zmq
+import simplejson as json
 
 
 RECV_TIMEOUT = 3000  # msec
@@ -61,15 +62,9 @@ class APNSProxyClient(object):
             self.close()
             raise IOError("Cannot connect to APNs Proxy Server. Timeout!!")
 
-    def send(self, token, message):
+    def send(self, token, message, sound='default', badge=None, expiry=None):
         """
         デバイストークンの送信
-
-        データフレームは次の構造である
-        - コマンド(1)
-        - アプリケーションID(2)
-        - デバイストークン(64)
-        - メッセージ
         """
         if len(token) != DEVICE_TOKEN_LENGTH:
             raise ValueError('Invalid token length %s' % token)
@@ -77,7 +72,18 @@ class APNSProxyClient(object):
             raise ValueError('Too long message')
         if isinstance(message, unicode):
             message = message.encode("utf-8")
-        self.client.send(COMMAND_TOKEN + self.application_id + token + message, zmq.SNDMORE)
+
+        self.client.send(COMMAND_TOKEN + json.dumps({
+            'appid': self.application_id,
+            'token': token,
+            'command': 'send',
+            'aps': {
+                'message': message,
+                'sound': sound,
+                'badge': badge,
+                'expiry': expiry
+            }
+        }, ensure_ascii=True), zmq.SNDMORE)
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type:
