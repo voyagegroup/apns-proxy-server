@@ -18,7 +18,8 @@ import zmq
 import simplejson as json
 
 
-RECV_TIMEOUT = 3000  # msec
+PING_TIMEOUT = 1500  # msec
+RECV_TIMEOUT = 9000  # msec
 
 COMMAND_PING = b'1'
 COMMAND_TOKEN = b'2'
@@ -54,7 +55,7 @@ class APNSProxyClient(object):
         self.client.send(COMMAND_PING)
         poller = zmq.Poller()
         poller.register(self.client, zmq.POLLIN)
-        if poller.poll(RECV_TIMEOUT):
+        if poller.poll(PING_TIMEOUT):
             ret = self.client.recv()
             if ret != "OK":
                 raise IOError("Invalid server state %s" % ret)
@@ -62,35 +63,42 @@ class APNSProxyClient(object):
             self.close()
             raise IOError("Cannot connect to APNs Proxy Server. Timeout!!")
 
-    def send(self, token, message, sound='default', badge=None, expiry=None):
+    def send(self, token, alert, sound='default', badge=None, expiry=None, test=False):
         """
         デバイストークンの送信
         """
         if len(token) != DEVICE_TOKEN_LENGTH:
             raise ValueError('Invalid token length %s' % token)
-        if len(message) > MAX_MESSAGE_LENGTH:
+        if len(alert) > MAX_MESSAGE_LENGTH:
             raise ValueError('Too long message')
-        if isinstance(message, unicode):
-            message = message.encode("utf-8")
+        self.client.send(self._serialize(
+            token, alert, sound, badge, expiry, test
+        ), zmq.SNDMORE)
 
-        self.client.send(COMMAND_TOKEN + json.dumps({
+    def _serialize(self, token, alert, sound, badge, expiry, test):
+        """
+        送信データのフォーマット
+        """
+        #if isinstance(alert, unicode):
+        #    alert = alert.encode("utf-8")
+        return COMMAND_TOKEN + json.dumps({
             'appid': self.application_id,
             'token': token,
-            'command': 'send',
+            'test': 'test' if test else '',
             'aps': {
-                'message': message,
+                'alert': alert,
                 'sound': sound,
                 'badge': badge,
                 'expiry': expiry
             }
-        }, ensure_ascii=True), zmq.SNDMORE)
+        }, ensure_ascii=True)
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type:
             self.close()
             return False
 
-        # バッファに残っているメッセージを流しきる
+        # バッファに残っているメッセージを確実に流しきる
         self.client.send(COMMAND_END)
         poller = zmq.Poller()
         poller.register(self.client, zmq.POLLIN)

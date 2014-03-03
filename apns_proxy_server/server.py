@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 APNs Proxy Server
-
-メッセージングにはZeroMQを使っている、メッセージフレームの構造は次の通り
---------------------------------
-| Command(1) | JSON String (n) |
---------------------------------
 """
 
 import logging
@@ -73,7 +68,7 @@ def dispatch(message):
             logging.error(ve)
             return
 
-    logging.debug("Dispatch to worker for application_id: %s" % application_id)
+    #logging.debug("Dispatch to worker for application_id: %s" % application_id)
     task_queues[application_id].put(data)
 
 
@@ -94,6 +89,6 @@ def create_worker(application_id, task_queue):
 
 def get_application_config(application_id):
     for app in settings.APPLICATIONS:
-       if app.get('application_id') == application_id:
-           return app
+        if app.get('application_id') == application_id:
+            return app
     raise ValueError('Unknown application_id given. (%s)' % application_id)

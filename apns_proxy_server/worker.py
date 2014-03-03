@@ -12,9 +12,8 @@ from apns import APNs, Payload, Frame
 
 
 class APNsError(Exception):
-    def __init__(self, status_code, token_idx, token):
+    def __init__(self, status_code, token_idx):
         self.status_code = status_code
-        self.token = token
         self.token_idx = token_idx
         self.msg = 'Invalid token found. Status: %s' % status_code
 
@@ -37,15 +36,19 @@ def send_worker(queue, application_id, use_sandbox, cert_file, key_file):
             apns = get_apns_instance(use_sandbox, cert_file, key_file)
             while True:
                 item = queue.get()
-                logging.info("%s %s %s" % (thread_name, item.get('token'), item.get('aps')))
+                logging.debug("%s %s %s" % (thread_name, item.get('token'), item.get('aps')))
                 counter += 1
                 recent_sended[counter] = item.get('token')
-                send(apns.gateway_server, create_frame(item.get('token'), counter, **item.get('aps')))
+                send(
+                    apns.gateway_server,
+                    create_frame(item.get('token'), counter, **item.get('aps')),
+                    item.get('test'))
 
                 cur_time = time.time()
                 time_diff = cur_time - last_sended_time
                 last_sended_time = cur_time
-                if (counter % 500 == 0) or (time_diff > 1):
+                if (counter % 1 == 0) or (time_diff > 1):
+                    logging.info('%s Check error response %i' % (thread_name, counter))
                     check_error_response(apns.gateway_server)
                     recent_sended = {}
 
@@ -64,13 +67,18 @@ def send_worker(queue, application_id, use_sandbox, cert_file, key_file):
                 logging.error(e)
 
 
-def send(server, frame):
+def send(server, frame, test=False):
+    if test:
+        return
+    logging.debug('Send!!')
     server.send_notification_multiple(frame)
 
 
-def create_frame(token, identifier, message, sound, badge, expiry):
-    payload = Payload(alert=message, sound=sound, badge=badge)
+def create_frame(token, identifier, alert, sound, badge, expiry):
+    payload = Payload(alert=alert, sound=sound, badge=badge)
     priority = 10
+    if expiry is None:
+        expiry = int(time.time()) + (60 * 60)  # 1 hour
     frame = Frame()
     frame.add_item(token, payload, identifier, expiry, priority)
     return frame
@@ -92,6 +100,7 @@ def check_error_response(server):
         if len(error_bytes) < 6:
             return
 
+        # エラー有り
         logging.info("Error response %s" % b2a_hex(error_bytes))
         command = b2a_hex(unpack('>c', error_bytes[0:1])[0])
         if command != '08':
