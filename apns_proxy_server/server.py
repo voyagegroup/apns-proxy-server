@@ -74,21 +74,21 @@ def dispatch(message):
 
 def create_worker(application_id, task_queue):
     logging.info("Create worker for: %s" % application_id)
-    app = get_application_config(application_id)
+    app_config = get_application_config(application_id)
     for i in xrange(settings.THREAD_NUMS_PER_APPLICATION):
-        thread_name = "SendWorker:%s_%i" % (app.get('name'), i)
+        thread_name = "SendWorker:%s_%i" % (app_config['name'], i)
         thread = threading.Thread(target=worker.send_worker, name=thread_name, args=(
             task_queue,
             application_id,
-            app.get('sandbox'),
-            app.get('cert_file'),
-            app.get('key_file')
+            app_config['sandbox'],
+            app_config['cert_file'],
+            app_config['key_file']
         ))
         thread.start()
 
 
 def get_application_config(application_id):
-    for app in settings.APPLICATIONS:
-        if app.get('application_id') == application_id:
-            return app
+    for c in settings.APPLICATIONS:
+        if c['application_id'] == application_id:
+            return c
     raise ValueError('Unknown application_id given. (%s)' % application_id)
