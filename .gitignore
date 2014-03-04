@@ -42,6 +42,9 @@ nosetests.xml
 settings.py
 apns_certs/*
 !apns_certs/.gitkeep
+# For unit test
+!apns_certs/sample.cert
+!apns_certs/sample.key
 
 # pid
 run/*.pid
