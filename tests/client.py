@@ -23,7 +23,7 @@ RECV_TIMEOUT = 9000  # msec
 
 COMMAND_PING = b'1'
 COMMAND_TOKEN = b'2'
-COMMAND_END = b'3'
+COMMAND_FLUSH = b'z'
 
 DEVICE_TOKEN_LENGTH = 64
 MAX_MESSAGE_LENGTH = 255
@@ -67,20 +67,37 @@ class APNSProxyClient(object):
         """
         デバイストークンの送信
         """
-        if len(token) != DEVICE_TOKEN_LENGTH:
-            raise ValueError('Invalid token length %s' % token)
-        if len(alert) > MAX_MESSAGE_LENGTH:
-            raise ValueError('Too long message')
+        self._check_token(token)
+        self._check_alert(alert)
         self.client.send(self._serialize(
             token, alert, sound, badge, expiry, test
         ), zmq.SNDMORE)
+        self.flush()
+
+    def send_more(self, token, alert, sound='default', badge=None, expiry=None, test=False):
+        """
+        デバイストークンの送信
+        """
+        self._check_token(token)
+        self._check_alert(alert)
+        self.client.send(self._serialize(
+            token, alert, sound, badge, expiry, test
+        ), zmq.SNDMORE)
+
+    @staticmethod
+    def _check_token(token):
+        if len(token) != DEVICE_TOKEN_LENGTH:
+            raise ValueError('Invalid token length %s' % token)
+
+    @staticmethod
+    def _check_alert(alert):
+        if len(alert) > MAX_MESSAGE_LENGTH:
+            raise ValueError('Too long message')
 
     def _serialize(self, token, alert, sound, badge, expiry, test):
         """
         送信データのフォーマット
         """
-        #if isinstance(alert, unicode):
-        #    alert = alert.encode("utf-8")
         return COMMAND_TOKEN + json.dumps({
             'appid': self.application_id,
             'token': token,
@@ -93,13 +110,8 @@ class APNSProxyClient(object):
             }
         }, ensure_ascii=True)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type:
-            self.close()
-            return False
-
-        # バッファに残っているメッセージを確実に流しきる
-        self.client.send(COMMAND_END)
+    def flush(self):
+        self.client.send(COMMAND_FLUSH)
         poller = zmq.Poller()
         poller.register(self.client, zmq.POLLIN)
         if poller.poll(RECV_TIMEOUT):
@@ -107,6 +119,13 @@ class APNSProxyClient(object):
         else:
             self.close()
             raise IOError("Server cannot respond. Some messages may lost.")
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            self.close()
+            return False
+        # バッファに残っているメッセージを確実に流しきる
+        self.flush()
         return True
 
     def close(self):

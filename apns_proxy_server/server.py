@@ -17,7 +17,7 @@ from . import worker
 COMMAND_LENGTH = 1
 COMMAND_PING = b'1'
 COMMAND_TOKEN = b'2'
-COMMAND_END = b'3'
+COMMAND_FLUSH = b'z'
 
 task_queues = {}
 
@@ -29,13 +29,14 @@ def start(address):
     try:
         while 1:
             message = server.recv()
+            logging.debug("Received %s" % message)
             command = message[:COMMAND_LENGTH]
             if command == COMMAND_TOKEN:
                 dispatch(message)
             elif command == COMMAND_PING:
-                server.send(b"OK")
-            elif command == COMMAND_END:
-                server.send(b"OK")
+                reply(server)
+            elif command == COMMAND_FLUSH:
+                reply(server)
             else:
                 logging.warn("UNKNOWN COMMAND Received:%s" % command)
     except Exception, e:
@@ -44,6 +45,10 @@ def start(address):
     finally:
         server.close()
         context.term()
+
+
+def reply(sock):
+    sock.send(b"OK")
 
 
 def parse_message(message):

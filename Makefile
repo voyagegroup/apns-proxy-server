@@ -19,9 +19,13 @@ run: clean
 test: clean
 	./bin/nosetests
 
-live_test: clean
-	./bin/python -m tests.live_test
+many_token_test: clean
+	./bin/python -m tests.many_token_test
+
+connection_keep_test: clean
+	./bin/python -m tests.connection_keep_test
 
 clean:
 	-rm apns_proxy_server/**/*.pyc
+	-rm tests/**/*.pyc
 	-rm settings.pyc
