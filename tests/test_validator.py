@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+validatorモジュールのテスト
+"""
 
 import os.path
 
@@ -9,6 +12,8 @@ import tests.data.error_settings1
 import tests.data.error_settings2
 import tests.data.error_settings3
 import tests.data.error_settings4
+import tests.data.error_settings5
+import tests.data.error_settings6
 import tests.data.valid_settings
 
 
@@ -32,6 +37,16 @@ def test_invalid_settings4():
     validator.validate_settings(tests.data.error_settings4)
 
 
+@raises(IOError)
+def test_cert_file_not_found():
+    validator.validate_settings(tests.data.error_settings5)
+
+
+@raises(IOError)
+def test_key_file_not_found():
+    validator.validate_settings(tests.data.error_settings6)
+
+
 def test_valid_settings():
     validator.validate_settings(tests.data.valid_settings)
 
@@ -41,3 +56,5 @@ def test_path_changed_abs_path():
     for app in s.APPLICATIONS:
         eq_(True, os.path.isabs(app.get('cert_file')))
         eq_(True, os.path.isabs(app.get('key_file')))
+
+
