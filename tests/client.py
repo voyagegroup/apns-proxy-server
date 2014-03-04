@@ -14,16 +14,16 @@ Usage:
         client.send(token, msg)
 """
 
+import time
+
 import zmq
 import simplejson as json
 
 
-PING_TIMEOUT = 1500  # msec
-RECV_TIMEOUT = 9000  # msec
+READ_TIMEOUT = 1500  # msec
+FLUSH_TIMEOUT = 5000  # msec
 
-COMMAND_PING = b'1'
-COMMAND_TOKEN = b'2'
-COMMAND_FLUSH = b'z'
+COMMAND_ASK_ADDRESS = b'1'
 
 DEVICE_TOKEN_LENGTH = 64
 MAX_MESSAGE_LENGTH = 255
@@ -31,34 +31,48 @@ MAX_MESSAGE_LENGTH = 255
 
 class APNSProxyClient(object):
 
-    def __init__(self, address, application_id):
-        """ZMQコンテキストとソケットの初期化"""
-        if address is None:
-            raise ValueError("address must be string")
-        self.address = address
+    def __init__(self, host, port, application_id):
+        """
+        ZMQコンテキストとソケットの初期化
+        """
+        if host is None or not isinstance(host, str):
+            raise ValueError("host must be string")
+        if port is None or not isinstance(port, int):
+            raise ValueError("host must be int type")
+        self.host = host
+        self.port = port
 
         self.context = zmq.Context()
-        self.context.setsockopt(zmq.LINGER, 2000)
+        self.context.setsockopt(zmq.LINGER, FLUSH_TIMEOUT)
 
-        self.client = self.context.socket(zmq.REQ)
+        self.communicator = self.context.socket(zmq.REQ)
+        self.publisher = self.context.socket(zmq.PUSH)
 
         if not isinstance(application_id, str) or len(application_id) != 2:
             raise ValueError("application_id must be 2 length string")
         self.application_id = application_id
 
     def __enter__(self):
-        """リモートサーバーへ接続"""
-        self.client.connect(self.address)
-        self.ping()
+        self.connect()
 
-    def ping(self):
-        self.client.send(COMMAND_PING)
+    def connect(self):
+        """リモートサーバーへ接続"""
+        self.communicator.connect(self.build_address(self.port))
+        push_port = self.get_push_port()
+        self.publisher.connect(self.build_address(push_port))
+
+    def build_address(self, port):
+        return "tcp://%s:%s" % (self.host, port)
+
+    def get_push_port(self):
+        """
+        PUSH-PULL接続用のポートを取得する
+        """
+        self.communicator.send(COMMAND_ASK_ADDRESS)
         poller = zmq.Poller()
-        poller.register(self.client, zmq.POLLIN)
-        if poller.poll(PING_TIMEOUT):
-            ret = self.client.recv()
-            if ret != "OK":
-                raise IOError("Invalid server state %s" % ret)
+        poller.register(self.communicator, zmq.POLLIN)
+        if poller.poll(READ_TIMEOUT):
+            return self.communicator.recv()
         else:
             self.close()
             raise IOError("Cannot connect to APNs Proxy Server. Timeout!!")
@@ -69,20 +83,9 @@ class APNSProxyClient(object):
         """
         self._check_token(token)
         self._check_alert(alert)
-        self.client.send(self._serialize(
+        self.publisher.send(self._serialize(
             token, alert, sound, badge, expiry, test
-        ), zmq.SNDMORE)
-        self.flush()
-
-    def send_more(self, token, alert, sound='default', badge=None, expiry=None, test=False):
-        """
-        デバイストークンの送信
-        """
-        self._check_token(token)
-        self._check_alert(alert)
-        self.client.send(self._serialize(
-            token, alert, sound, badge, expiry, test
-        ), zmq.SNDMORE)
+        ))
 
     @staticmethod
     def _check_token(token):
@@ -98,7 +101,7 @@ class APNSProxyClient(object):
         """
         送信データのフォーマット
         """
-        return COMMAND_TOKEN + json.dumps({
+        return json.dumps({
             'appid': self.application_id,
             'token': token,
             'test': 'test' if test else '',
@@ -110,24 +113,21 @@ class APNSProxyClient(object):
             }
         }, ensure_ascii=True)
 
-    def flush(self):
-        self.client.send(COMMAND_FLUSH)
-        poller = zmq.Poller()
-        poller.register(self.client, zmq.POLLIN)
-        if poller.poll(RECV_TIMEOUT):
-            self.client.recv()
-        else:
-            self.close()
-            raise IOError("Server cannot respond. Some messages may lost.")
-
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type:
-            self.close()
+            self._close()
             return False
-        # バッファに残っているメッセージを確実に流しきる
-        self.flush()
-        return True
+        self.close()
 
     def close(self):
-        self.client.close()
+        start_time = time.time()
+        self._close()
+        end_time = time.time()
+        if (end_time - start_time) > (FLUSH_TIMEOUT - 20)/1000.0:
+            raise IOError('Timeout close operation. Some messages may not reached to server.')
+        return True
+
+    def _close(self):
+        self.publisher.close()
+        self.communicator.close()
         self.context.term()
