@@ -47,7 +47,7 @@ def send_worker(queue, application_id, use_sandbox, cert_file, key_file):
                 cur_time = time.time()
                 time_diff = cur_time - last_sended_time
                 last_sended_time = cur_time
-                if (counter % 1 == 0) or (time_diff > 1):
+                if (counter % 500 == 0) or (time_diff > 1):
                     logging.info('%s Check error response %i' % (thread_name, counter))
                     check_error_response(apns.gateway_server)
                     recent_sended = {}
