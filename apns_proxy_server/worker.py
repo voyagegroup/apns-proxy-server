@@ -11,6 +11,25 @@ from apns import APNs, Payload, Frame
 
 
 class APNsError(Exception):
+    """
+    Apple Push Notificationサービスからのエラーレスポンスを表現する例外クラス
+    --------------------------
+    ステータスコード
+    --------------------------
+      0 エラーなし
+      1 処理エラー
+      2 デバイストークン欠如
+      3 トピック欠如
+      4 ペイロード欠如
+      5 無効なトークンサイズ
+      6 無効なトピックサイズ
+      7 無効なペイロードサイズ
+      8 無効なトークン
+     10 シャットダウン
+    255 なし(不明)
+    --------------------------
+    @see https://developer.apple.com/jp/devcenter/ios/library/documentation/RemoteNotificationsPG.pdf
+    """
     def __init__(self, status_code, token_idx):
         self.status_code = status_code
         self.token_idx = token_idx
