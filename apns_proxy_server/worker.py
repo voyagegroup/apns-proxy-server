@@ -45,8 +45,8 @@ class SendWorkerThread(threading.Thread):
     APNs送信用のワーカースレッド
     """
 
-    # 送信済みのアイテムを保持する数, APNsからはエラーが非同期で得られるので
-    # リトライ用用に送信後しばらくは保持しておく必要がある
+    # 送信済みのアイテムを保持する数
+    # APNsからはエラーが非同期で得られるのでリトライ用に送信後しばらくは保持しておく必要がある
     KEEP_SENDED_ITEMS_NUM = 2000
 
     # タスクキューのタイムアウト (sec)
@@ -66,7 +66,6 @@ class SendWorkerThread(threading.Thread):
         self._apns = None
 
         self.count = 0
-        # どのトークンがエラーになったか後で確認するための辞書
         self.recent_sended = {}
 
     @property
@@ -106,11 +105,11 @@ class SendWorkerThread(threading.Thread):
         item = self.task_queue.get(True, self.TASK_QUEUE_TIMEOUT)
         #logging.debug("%s %s" % (self.name, item))
         self.count += 1
-        self.push_recent_sended(self.count, item)
+        self.store_item(self.count, item)
         self.send(item['token'], item.get('aps'), item.get('test'))
         self.error_check()
 
-    def push_recent_sended(self, idx, item):
+    def store_item(self, idx, item):
         self.recent_sended[idx] = item
         if idx > self.KEEP_SENDED_ITEMS_NUM:
             self.recent_sended.pop(idx - self.KEEP_SENDED_ITEMS_NUM)
@@ -127,6 +126,9 @@ class SendWorkerThread(threading.Thread):
         self.retry_from(self.count)
 
     def retry_from(self, start_token_idx):
+        """
+        リトライするために、タスクキューにアイテムを追加する
+        """
         idx = start_token_idx
         while idx <= self.count:
             self.task_queue.put(self.recent_sended[idx])
