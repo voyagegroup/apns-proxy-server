@@ -15,8 +15,8 @@ def main():
             i += 1
             client.send(token, u"☆この案件ありますお☆" + str(i), badge=i)
             print("Send %i" % i)
-            if interval < 60:
-                interval += 3
+            if interval < 10 * 60:
+                interval += 5
             time.sleep(interval)
 
 

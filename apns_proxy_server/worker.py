@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import Queue
 import socket
 import time
 import threading
@@ -48,6 +49,10 @@ class SendWorkerThread(threading.Thread):
     # リトライ用用に送信後しばらくは保持しておく必要がある
     KEEP_SENDED_ITEMS_NUM = 2000
 
+    # タスクキューのタイムアウト (sec)
+    # 暇な時はリモートサーバーとの接続を切っておくのに使う
+    TASK_QUEUE_TIMEOUT = 5 * 60  # 10min
+
     def __init__(self, task_queue, name, use_sandbox, cert_file, key_file):
         threading.Thread.__init__(self)
         self.setDaemon(True)
@@ -63,8 +68,6 @@ class SendWorkerThread(threading.Thread):
         self.count = 0
         # どのトークンがエラーになったか後で確認するための辞書
         self.recent_sended = {}
-        # 一定時間送信しない場合は、APNsサーバーとの接続を切るためのタイムスタンプ
-        self.last_sended_time = time.time()
 
     @property
     def apns(self):
@@ -84,12 +87,15 @@ class SendWorkerThread(threading.Thread):
             try:
                 while True:
                     self.main()
+            except Queue.Empty:
+                pass
             except socket.error, e:
                 if isinstance(e.args, tuple):
                     logging.warn("errno is %s" % str(e[0]))
                 logging.warn(e)
                 # 考えられるエラー
                 # (1) 不正なトークンを送ったことにより、接続を切られた
+                #     (self.error_checkでエラーを確認してこちらから切るよりも先に切られた)
                 # (2) コネクションを長く張りすぎた事により、接続を切られた
                 # どちらにしろ、どこまで送信成功したか判断できないので最後の一個だけリトライする
                 self.retry_last_one()
@@ -97,7 +103,7 @@ class SendWorkerThread(threading.Thread):
                 self.clear_connection()
 
     def main(self):
-        item = self.task_queue.get()
+        item = self.task_queue.get(True, self.TASK_QUEUE_TIMEOUT)
         #logging.debug("%s %s" % (self.name, item))
         self.count += 1
         self.push_recent_sended(self.count, item)
