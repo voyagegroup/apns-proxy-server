@@ -1,15 +1,23 @@
 # -*- coding: utf-8 -*-
 """
 APNs Proxy Server
+
+サーバーは2つのポートを利用する。
+
+1. ZMQ REQ-REP Connection
+REQ-REP接続は、応答が必要な処理に利用する。これは同期処理になる。
+
+2. ZMQ PUSH-PULL Connection
+PUSH-PULL接続は、ストリーム処理に利用する。サーバーは応答を返さない。
+Push通知の内容はPULL Socketで受ける。
 """
 
 import logging
-import traceback
-import threading
 from Queue import Queue
+import traceback
 
-import zmq
 import simplejson as json
+import zmq
 
 import settings
 from . import worker
@@ -20,24 +28,17 @@ COMMAND_ASK_ADDRESS = b'1'
 task_queues = {}
 
 
-def start(rep_port, pull_port):
-    """
-    サーバーの起動
-    サーバーは2つのポートを利用する。
+def start():
+    logging.info('Start server.')
+    logging.info('Use port %s' % settings.BIND_PORT_FOR_ENTRY)
+    logging.info('Use port %s' % settings.BIND_PORT_FOR_PULL)
 
-    1. ZMQ REQ-REP Connection
-    REQ-REP接続は、応答が必要な処理に利用する。これは同期処理になる。
-
-    2. ZMQ PUSH-PULL Socket
-    PUSH-PULL接続は、ストリーム処理に利用する。サーバーは応答を返さない。
-    Push通知の内容はPULL Socketで受ける。
-    """
     context = zmq.Context()
     rep_server = context.socket(zmq.REP)
-    rep_server.bind("tcp://*:" + str(rep_port))
+    rep_server.bind("tcp://*:" + str(settings.BIND_PORT_FOR_ENTRY))
 
     pull_server = context.socket(zmq.PULL)
-    pull_server.bind("tcp://*:" + str(pull_port))
+    pull_server.bind("tcp://*:" + str(settings.BIND_PORT_FOR_PULL))
 
     poller = zmq.Poller()
     poller.register(rep_server, zmq.POLLIN)
@@ -51,7 +52,7 @@ def start(rep_port, pull_port):
             if rep_server in items:
                 # Now ping message only
                 rep_server.recv()
-                rep_server.send(str(pull_port))
+                rep_server.send(str(settings.BIND_PORT_FOR_PULL))
     except Exception, e:
         logging.error(e)
         logging.error(traceback.format_exc())
@@ -63,7 +64,7 @@ def start(rep_port, pull_port):
 
 def dispatch(message):
     """
-    ワーカースレッドにメッセージを渡す
+    ワーカーにメッセージを渡す
     """
     data = parse_message(message)
     application_id = data.get('appid')
@@ -75,8 +76,6 @@ def dispatch(message):
         except ValueError, ve:
             logging.error(ve)
             return
-
-    #logging.debug("Dispatch to worker for application_id: %s" % application_id)
     task_queues[application_id].put(data)
 
 
