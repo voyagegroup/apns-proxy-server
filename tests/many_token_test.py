@@ -11,13 +11,11 @@ def con1():
     with client:
         print("start send roop 1")
         cnt = 0
+        msg = u"これはメッセージです"
         for i in xrange(100000):
             cnt += 1
             token = "b7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
-            msg = u"これはメッセージです" + str(cnt)
             client.send(token, msg, badge=1, test=True)
-            if i % 3000 == 0:
-                print("Con1 Sended %i" % i)
 
 
 def con2():
