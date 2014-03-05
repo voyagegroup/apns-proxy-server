@@ -4,7 +4,6 @@
 """
 
 import os.path
-import logging
 
 
 def validate_settings(settings):
@@ -51,5 +50,3 @@ def check_file_exists(app):
 
     if not os.path.isfile(app['key_file']):
         raise IOError('Key file not found: %s' % app['key_file'])
-
-
