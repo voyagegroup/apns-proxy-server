@@ -1,4 +1,4 @@
-# APNS-HTTP-Proxy
+# APNS-Proxy-Server
 
 デバイストークンを受けて、APNsに流すサーバー
 
