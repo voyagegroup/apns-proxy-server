@@ -3,18 +3,6 @@
 app=`basename $0`
 pid=`dirname $0`/run/apns_proxy_server.pid
 
-debug() {
-    if [ -f $pid ] && kill -0 `cat $pid` 2>/dev/null; then
-        echo "running already. pid: `cat $pid`";
-        return 1;
-    fi
-
-    cd `dirname $0`
-    ./bin/python -m apns_proxy_server.invoker >> debug.log &
-
-    mkdir -p `dirname $pid`
-    echo $! > $pid
-}
 
 start() {
     if [ -f $pid ] && kill -0 `cat $pid` 2>/dev/null; then
@@ -65,11 +53,8 @@ case "$1" in
   status)
     status
     ;;
-  debug)
-    debug
-    ;;
   *)
-    echo $"Usage: $0 {start|stop|restart|status|debug}"
+    echo $"Usage: $0 {start|stop|restart|status}"
     exit 1
 esac
 
