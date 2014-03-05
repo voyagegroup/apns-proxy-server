@@ -104,7 +104,7 @@ class APNSProxyClient(object):
         return json.dumps({
             'appid': self.application_id,
             'token': token,
-            'test': 'test' if test else '',
+            'test': test,
             'aps': {
                 'alert': alert,
                 'sound': sound,

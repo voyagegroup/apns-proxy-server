@@ -16,6 +16,8 @@ def con1():
             cnt += 1
             token = "b7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
             client.send(token, msg, badge=1, test=True)
+            if i % 3000 == 0:
+                print("Con1 Sended %i" % i)
 
 
 def con2():
@@ -51,11 +53,11 @@ def main():
     print("Start connection")
     start_time = time.time()
     thread1 = threading.Thread(target=con1)
-#    thread2 = threading.Thread(target=con2)
+    thread2 = threading.Thread(target=con2)
     thread1.start()
-#    thread2.start()
+    thread2.start()
     thread1.join()
-#    thread2.join()
+    thread2.join()
     end_time = time.time()
     print("Passed %f sec" % (end_time - start_time))
 
