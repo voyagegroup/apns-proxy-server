@@ -173,16 +173,13 @@ class SendWorkerThread(threading.Thread):
         try:
             self.apns.gateway_server._socket.settimeout(0.5)
             error_bytes = self.apns.gateway_server.read(6)
-
             if len(error_bytes) < 6:
                 return
 
-            # エラー有り
             command = b2a_hex(unpack('>c', error_bytes[0:1])[0])
             if command != '08':
                 logging.warn('Unknown command received %s', command)
                 return
-
             status = b2a_hex(unpack('>c', error_bytes[1:2])[0])
             identifier = unpack('>I', error_bytes[2:6])[0]
             raise APNsError(status, identifier)
