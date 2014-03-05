@@ -15,47 +15,50 @@ import settings
 from . import worker
 
 COMMAND_LENGTH = 1
-COMMAND_PING = b'1'
-COMMAND_TOKEN = b'2'
-COMMAND_FLUSH = b'z'
+COMMAND_ASK_ADDRESS = b'1'
 
 task_queues = {}
 
 
-def start(address):
+def start(rep_port, pull_port):
+    """
+    サーバーの起動
+    サーバーは2つのポートを利用する。
+
+    1. ZMQ REQ-REP Connection
+    REQ-REP接続は、応答が必要な処理に利用する。これは同期処理になる。
+
+    2. ZMQ PUSH-PULL Socket
+    PUSH-PULL接続は、ストリーム処理に利用する。サーバーは応答を返さない。
+    Push通知の内容はPULL Socketで受ける。
+    """
     context = zmq.Context()
-    server = context.socket(zmq.REP)
-    server.bind(address)
+    rep_server = context.socket(zmq.REP)
+    rep_server.bind("tcp://*:" + str(rep_port))
+
+    pull_server = context.socket(zmq.PULL)
+    pull_server.bind("tcp://*:" + str(pull_port))
+
+    poller = zmq.Poller()
+    poller.register(rep_server, zmq.POLLIN)
+    poller.register(pull_server, zmq.POLLIN)
+
     try:
         while 1:
-            message = server.recv()
-            logging.debug("Received %s" % message)
-            command = message[:COMMAND_LENGTH]
-            if command == COMMAND_TOKEN:
-                dispatch(message)
-            elif command == COMMAND_PING:
-                reply(server)
-            elif command == COMMAND_FLUSH:
-                reply(server)
-            else:
-                logging.warn("UNKNOWN COMMAND Received:%s" % command)
+            items = dict(poller.poll())
+            if pull_server in items:
+                dispatch(pull_server.recv())
+            if rep_server in items:
+                # Now ping message only
+                rep_server.recv()
+                rep_server.send(str(pull_port))
     except Exception, e:
         logging.error(e)
         logging.error(traceback.format_exc())
     finally:
-        server.close()
+        rep_server.close()
+        pull_server.close()
         context.term()
-
-
-def reply(sock):
-    sock.send(b"OK")
-
-
-def parse_message(message):
-    """
-    データフレームから各値を取り出す
-    """
-    return json.loads(message[COMMAND_LENGTH:])
 
 
 def dispatch(message):
@@ -75,6 +78,13 @@ def dispatch(message):
 
     #logging.debug("Dispatch to worker for application_id: %s" % application_id)
     task_queues[application_id].put(data)
+
+
+def parse_message(message):
+    """
+    データフレームから各値を取り出す
+    """
+    return json.loads(message)
 
 
 def create_worker(application_id, task_queue):
