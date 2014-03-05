@@ -92,13 +92,13 @@ def create_worker(application_id, task_queue):
     app_config = get_application_config(application_id)
     for i in xrange(settings.THREAD_NUMS_PER_APPLICATION):
         thread_name = "SendWorker:%s_%i" % (app_config['name'], i)
-        thread = threading.Thread(target=worker.send_worker, name=thread_name, args=(
+        thread = worker.SendWorkerThread(
             task_queue,
-            application_id,
+            thread_name,
             app_config['sandbox'],
             app_config['cert_file'],
             app_config['key_file']
-        ))
+        )
         thread.start()
 
 
