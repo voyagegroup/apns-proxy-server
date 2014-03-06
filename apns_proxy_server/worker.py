@@ -5,6 +5,7 @@ import Queue
 import socket
 import time
 import threading
+import traceback
 from binascii import b2a_hex
 from struct import unpack
 
@@ -89,9 +90,8 @@ class SendWorkerThread(threading.Thread):
             except Queue.Empty:
                 pass
             except socket.error, e:
-                if isinstance(e.args, tuple):
-                    logging.warn("errno is %s" % str(e[0]))
                 logging.warn(e)
+                logging.warn(traceback.format_exc())
                 # 考えられるエラー
                 # (1) 不正なトークンを送ったことにより、接続を切られた
                 #     (self.error_checkでエラーを確認してこちらから切るよりも先に切られた)
