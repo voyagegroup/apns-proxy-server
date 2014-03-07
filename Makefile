@@ -6,12 +6,12 @@ help:
 
 setup:
 	virtualenv . --no-site-packages
-	./bin/pip install -r requirements.txt
+	./bin/pip install -r requirements_prod.txt
 	chmod -R g+w .
 
 
 lint:
-	flake8 apns_proxy_server
+	./bin/flake8 apns_proxy_server
 
 run: clean
 	./bin/python -m apns_proxy_server.invoker
