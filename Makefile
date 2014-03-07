@@ -9,7 +9,6 @@ setup:
 	./bin/pip install -r requirements_prod.txt
 	chmod -R g+w .
 
-
 lint:
 	./bin/flake8 apns_proxy_server
 
@@ -18,12 +17,6 @@ run: clean
 
 test: clean
 	./bin/nosetests
-
-many_token_test: clean
-	./bin/python -m tests.many_token_test
-
-connection_keep_test: clean
-	./bin/python -m tests.connection_keep_test
 
 clean:
 	-rm apns_proxy_server/**/*.pyc
