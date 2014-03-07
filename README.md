@@ -36,8 +36,7 @@ Please see [client repository](https://github.com/genesix/APNS-Proxy-Client-py) 
 Command | Description
 --- | ---
 make setup | Setup python environment
-make lint | Check coding style using flake8. Need flake8 on your $PATH
+make lint | Check coding style using flake8
 make test | Run Tests
-make live_test | Run test using server and client
 make run | Run server
 
