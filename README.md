@@ -27,6 +27,10 @@ make setup
 apns-proxy-server.sh start
 ```
 
+## How to use
+
+Please see [client repository](https://github.com/genesix/APNS-Proxy-Client-py) or examples folder.
+
 ## 開発用のコマンド
 
 Command | Description
