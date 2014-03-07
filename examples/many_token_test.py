@@ -3,7 +3,7 @@
 import time
 import threading
 
-from .client import APNSProxyClient
+from apns_proxy_client import APNSProxyClient
 
 
 def con1():
@@ -14,7 +14,7 @@ def con1():
         msg = u"これはメッセージです"
         for i in xrange(100000):
             cnt += 1
-            token = "b7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
+            token = "a7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
             client.send(token, msg, badge=1, test=True)
             if i % 3000 == 0:
                 print("Con1 Sended %i" % i)
@@ -27,26 +27,11 @@ def con2():
         cnt = 0
         for i in xrange(100000):
             cnt += 1
-            token = "b7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
+            token = "a7ae2fcdb2d325a2de86d572103bff6dd272576d43677544778c43a674407ec1"
             msg = u"これはメッセージです" + str(cnt)
             client.send(token, msg, badge=1, test=True)
             if i % 3000 == 0:
                 print("Con2 Sended %i" % i)
-
-
-#def con3():
-#    client = APNSProxyClient(address="tcp://localhost:5556", application_id="13")
-#    with client:
-#        print("start send roop 3")
-#        cnt = 0
-#        for i in xrange(100):
-#            cnt += 1
-#            token = "b7ae2fcdb2dxxxxxxxxxxxxxxxxxxxxxxx72576d43677544778c43a674407ec1"
-#            msg = u"これは15へのメッセージです" + str(cnt)
-#            client.send(token, msg, badge=1, test=True)
-#            if i % 3000 == 0:
-#                client.flush()
-#                print("Sended %i" % i)
 
 
 def main():
