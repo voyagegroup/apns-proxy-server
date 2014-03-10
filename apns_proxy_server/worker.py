@@ -52,7 +52,7 @@ class SendWorkerThread(threading.Thread):
 
     # タスクキューのタイムアウト (sec)
     # 暇な時はリモートサーバーとの接続を切っておくのに使う
-    TASK_QUEUE_TIMEOUT = 5 * 60  # 10min
+    TASK_QUEUE_TIMEOUT = 5 * 60  # 5min
 
     def __init__(self, task_queue, name, use_sandbox, cert_file, key_file):
         threading.Thread.__init__(self)
