@@ -4,11 +4,6 @@ help:
 	@echo "Please [make setup] first."
 	@echo "After python environment created, activate local python by [source ./python/bin/activate]"
 
-setup_prod:
-	virtualenv . --no-site-packages
-	./bin/pip install -r requirements_prod.txt
-	chmod -R g+w .
-
 setup_dev:
 	virtualenv . --no-site-packages
 	./bin/pip install -r requirements_dev.txt
@@ -27,3 +22,18 @@ clean:
 	-rm apns_proxy_server/**/*.pyc
 	-rm tests/**/*.pyc
 	-rm settings.pyc
+
+setup_prod:
+	virtualenv . --no-site-packages
+	./bin/pip install --upgrade pip
+	./bin/pip install --upgrade setuptools
+	./bin/pip install wheel
+	./bin/pip install --no-deps wheelhouse/*
+
+create_wheels:
+	-mkdir wheelhouse
+	-rm wheelhouse/*
+	./bin/pip install --upgrade pip
+	./bin/pip install --upgrade setuptools
+	./bin/pip install wheel
+	./bin/pip wheel --wheel-dir=./wheelhouse -r requirements_prod.txt
