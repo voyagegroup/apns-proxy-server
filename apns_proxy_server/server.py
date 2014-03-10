@@ -30,6 +30,8 @@ task_queues = {}
 
 def start():
     logging.info('Start server.')
+    create_workers()
+
     logging.info('Use port %s' % settings.BIND_PORT_FOR_ENTRY)
     logging.info('Use port %s' % settings.BIND_PORT_FOR_PULL)
 
@@ -68,15 +70,10 @@ def dispatch(message):
     """
     data = parse_message(message)
     application_id = data.get('appid')
-    if not application_id in task_queues:
-        try:
-            q = Queue()
-            create_worker(application_id, q)
-            task_queues[application_id] = q
-        except ValueError, ve:
-            logging.error(ve)
-            return
-    task_queues[application_id].put(data)
+    if application_id in task_queues:
+        task_queues[application_id].put(data)
+    else:
+        logging.warn('Unknown application_id received %s' % application_id)
 
 
 def parse_message(message):
@@ -86,23 +83,25 @@ def parse_message(message):
     return json.loads(message)
 
 
-def create_worker(application_id, task_queue):
-    logging.info("Create worker for: %s" % application_id)
-    app_config = get_application_config(application_id)
-    for i in xrange(settings.THREAD_NUMS_PER_APPLICATION):
-        thread_name = "SendWorker:%s_%i" % (app_config['name'], i)
-        thread = worker.SendWorkerThread(
-            task_queue,
-            thread_name,
-            app_config['sandbox'],
-            app_config['cert_file'],
-            app_config['key_file']
-        )
-        thread.start()
+def create_workers():
+    """
+    ワーカースレッドと、ワーカーとやりとりをするタスクキューの生成
+    """
+    for app in settings.APPLICATIONS:
+        task_queue = Queue()
+        for i in xrange(settings.THREAD_NUMS_PER_APPLICATION):
+            create_worker(app, task_queue, i)
+        task_queues[app['application_id']] = task_queue
 
 
-def get_application_config(application_id):
-    for c in settings.APPLICATIONS:
-        if c['application_id'] == application_id:
-            return c
-    raise ValueError('Unknown application_id given. (%s)' % application_id)
+def create_worker(app_config, task_queue, sub_no):
+    thread_name = "SendWorker:%s_%i" % (app_config['name'], sub_no)
+    thread = worker.SendWorkerThread(
+        task_queue,
+        thread_name,
+        app_config['sandbox'],
+        app_config['cert_file'],
+        app_config['key_file']
+    )
+    thread.start()
+    logging.info('Thread created %s' % thread_name)
