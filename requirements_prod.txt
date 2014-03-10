@@ -1,4 +1,4 @@
 -e git+git@github.com:djacobs/PyAPNs.git@c8028ed2126793c346eff89389fdfba433c581ac#egg=apns-master
-nose==1.3.0
 pyzmq==14.0.1
 wsgiref==0.1.2
+simplejson==3.3.3
