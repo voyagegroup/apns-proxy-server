@@ -23,7 +23,8 @@ import settings
 from . import worker
 
 COMMAND_LENGTH = 1
-COMMAND_ASK_ADDRESS = b'1'
+COMMAND_ASK_ADDRESS = b'\1'
+COMMAND_SEND = b'\2'
 
 task_queues = {}
 
@@ -50,11 +51,12 @@ def start():
         while 1:
             items = dict(poller.poll())
             if pull_server in items:
-                dispatch(pull_server.recv())
+                # PULL socket cannot return
+                process_message(pull_server.recv())
             if rep_server in items:
-                # Now ping message only
-                rep_server.recv()
-                rep_server.send(str(settings.BIND_PORT_FOR_PULL))
+                # REP socket must return
+                result = process_message(rep_server.recv())
+                rep_server.send(result)
     except Exception, e:
         logging.error(e)
         logging.error(traceback.format_exc())
@@ -64,9 +66,19 @@ def start():
         context.term()
 
 
-def dispatch(message):
+def process_message(message):
+    command = message[:1]
+    if command == COMMAND_ASK_ADDRESS:
+        return str(settings.BIND_PORT_FOR_PULL)
+    elif command == COMMAND_SEND:
+        dispatch_queue(message[1:])
+    else:
+        logging.warn('Unknown command received %s' % command)
+
+
+def dispatch_queue(message):
     """
-    ワーカーにメッセージを渡す
+    ワーカーにデータを渡す
     """
     data = parse_message(message)
     application_id = data.get('appid')

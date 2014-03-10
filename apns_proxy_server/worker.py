@@ -170,7 +170,6 @@ class SendWorkerThread(threading.Thread):
         ここにあるのも違和感なので、PyAPNSに追加してPullRequestを送る。
         """
         if self.apns.gateway_server._socket is None:
-            logging.warn("Connection has not established")
             return
 
         try:
