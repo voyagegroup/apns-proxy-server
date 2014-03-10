@@ -1,4 +1,4 @@
--e git://github.com/genesix/apns-proxy-client-py.git@f40bcc9e4dd485dc70e776c6ac735fea1df7f4b3#egg=APNSProxyServerClient-master
+-e git://github.com/genesix/apns-proxy-client-py.git@899b882244f044ac9ef98d94d8211ee884c27a60#egg=APNSProxyServerClient-master
 -e git+git@github.com:djacobs/PyAPNs.git@c8028ed2126793c346eff89389fdfba433c581ac#egg=apns-master
 flake8==2.1.0
 mccabe==0.2.1
