@@ -2,7 +2,7 @@
 import logging
 import traceback
 
-from . import server
+from .server import APNSProxyServer
 from . import validator
 import settings
 
@@ -16,7 +16,8 @@ def init_log(level):
 def main():
     try:
         init_log(settings.LOG_LEVEL)
-        validator.validate_settings(settings)
+        s = validator.validate_settings(settings)
+        server = APNSProxyServer(s)
         server.start()
     except Exception, e:
         logging.error(e)
