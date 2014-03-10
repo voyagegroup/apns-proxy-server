@@ -1,4 +1,4 @@
-# APNS-Proxy-Server
+# APNS Proxy Server
 
 デバイストークンを受けて、APNsに流すサーバー
 
@@ -29,7 +29,7 @@ apns-proxy-server.sh start
 
 ## How to use
 
-Please see [client repository](https://github.com/genesix/APNS-Proxy-Client-py) or examples folder.
+Please see [client repository](https://github.com/genesix/apns-proxy-client-py) or examples folder.
 
 ## 開発用のコマンド
 
