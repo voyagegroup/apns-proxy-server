@@ -4,9 +4,14 @@ help:
 	@echo "Please [make setup] first."
 	@echo "After python environment created, activate local python by [source ./python/bin/activate]"
 
-setup:
+setup_prod:
 	virtualenv . --no-site-packages
 	./bin/pip install -r requirements_prod.txt
+	chmod -R g+w .
+
+setup_dev:
+	virtualenv . --no-site-packages
+	./bin/pip install -r requirements_dev.txt
 	chmod -R g+w .
 
 lint:
