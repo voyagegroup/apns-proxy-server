@@ -7,13 +7,13 @@ import os.path
 
 
 def validate_settings(settings):
-    if not hasattr(settings, 'BIND_PORT_FOR_ENTRY'):
+    if not getattr(settings, 'BIND_PORT_FOR_ENTRY', None):
         raise ValueError('BIND_PORT_FOR_ENTRY not found in setttings')
-    if not hasattr(settings, 'BIND_PORT_FOR_PULL'):
+    if not getattr(settings, 'BIND_PORT_FOR_PULL', None):
         raise ValueError('BIND_PORT_FOR_PULL not found in setttings')
     if not hasattr(settings, 'THREAD_NUMS_PER_APPLICATION'):
         raise ValueError('THREAD_NUMS_PER_APPLICATION not found in settings')
-    if not hasattr(settings, 'APPLICATIONS'):
+    if not getattr(settings, 'APPLICATIONS', None):
         raise ValueError('APPLICATION not found in settings')
     for app in settings.APPLICATIONS:
         if not 'application_id' in app:
