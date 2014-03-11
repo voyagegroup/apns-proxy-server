@@ -31,6 +31,7 @@ setup_prod:
 	./bin/pip install --no-deps wheelhouse/*
 
 create_wheels:
+	virtualenv . --no-site-packages
 	-mkdir wheelhouse
 	-rm wheelhouse/*
 	./bin/pip install --upgrade pip
