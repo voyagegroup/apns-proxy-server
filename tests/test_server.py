@@ -23,8 +23,7 @@ def test_instance():
 
 
 def test_create_worker():
-    import tests.data.valid_settings
-    server = APNSProxyServer(tests.data.valid_settings)
+    server = APNSProxyServer({})
     server.create_workers([{
         "application_id": "myApp1",
         "name": "My App1",
@@ -44,8 +43,7 @@ def test_create_worker():
 
 
 def test_dispatch_known_app():
-    import tests.data.valid_settings
-    server = APNSProxyServer(tests.data.valid_settings)
+    server = APNSProxyServer({})
     server.create_workers([{
         "application_id": "myApp1",
         "name": "My App1",
@@ -85,8 +83,7 @@ def test_dispatch_known_app():
 
 
 def test_dispatch_unknown_app():
-    import tests.data.valid_settings
-    server = APNSProxyServer(tests.data.valid_settings)
+    server = APNSProxyServer({})
     server.create_workers([{
         "application_id": "myApp2",
         "name": "My App2",
@@ -107,6 +104,31 @@ def test_dispatch_unknown_app():
         }
     })), False, "Dispatch should be failed of unknown appid")
 
+
+def test_thread_count():
+    """
+    スレッド生成数のテスト
+    """
+    before_num = threading.active_count()
+
+    server = APNSProxyServer({})
+    server.create_workers([{
+        "application_id": "myApp1",
+        "name": "My App1",
+        "sandbox": False,
+        "cert_file": "sample.cert",
+        "key_file": "sample.key"
+    }, {
+        "application_id": "myApp2",
+        "name": "My App2",
+        "sandbox": False,
+        "cert_file": "sample.cert",
+        "key_file": "sample.key"
+    }], 3)
+
+    after_num = threading.active_count()
+
+    eq_(before_num + 6, after_num)
 
 def test_start():
     """
