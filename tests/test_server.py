@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-validatorモジュールのテスト
+serverモジュールのテスト
 """
 
 import json
