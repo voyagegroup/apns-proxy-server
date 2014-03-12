@@ -2,6 +2,8 @@
 
 デバイストークンを受けて、APNsに流すサーバー
 
+[![Build Status](https://travis-ci.org/genesix/apns-proxy-server.png?branch=master)](https://travis-ci.org/genesix/apns-proxy-server)
+
 - Multi-Application Support
 - Use Extended format (Can use expiry and priority field)
 - Check automatically error response
