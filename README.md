@@ -2,6 +2,12 @@
 
 デバイストークンを受けて、APNsに流すサーバー
 
+- Multi-Application Support
+- Use Extended format (Can use expiry and priority)
+- Check automatically error response
+- Check automatically feedback service
+- Native client for Python and more...
+
 ## Requirements
 
 - Python > 2.6
