@@ -6,8 +6,8 @@
 
 - Multi-Application Support
 - Use Extended format (Can use expiry and priority field)
-- Check automatically error response
-- Check automatically feedback service
+- Check error response
+- Check feedback service
 - Native client for Python and more...
 
 ## Requirements
