@@ -1,0 +1,9 @@
+# -*- coding: utf-8 -*-
+language: python
+
+python:
+  - "2.7"
+  - "2.6"
+
+install: "pip install -r requirements_test.txt"
+script: nosetests
