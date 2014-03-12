@@ -16,7 +16,7 @@ run: clean
 	./bin/python -m apns_proxy_server.invoker
 
 test: clean
-	./bin/nosetests
+	./bin/nosetests tests
 
 clean:
 	-rm apns_proxy_server/**/*.pyc
