@@ -4,6 +4,7 @@ serverモジュールのテスト
 """
 
 import json
+import socket
 import threading
 from Queue import Queue, Empty
 
@@ -68,6 +69,7 @@ def test_dispatch_known_app():
     eq_(server.dispatch_queue(json.dumps({
         "token": token,
         "appid": "myApp1",
+        "test": True,
         "aps": {
             "alert": "This is test",
             "badge": 1,
@@ -79,6 +81,7 @@ def test_dispatch_known_app():
     eq_(server.dispatch_queue(json.dumps({
         "token": token,
         "appid": "myApp2",
+        "test": True,
         "aps": {
             "alert": "This is test",
             "badge": 1,
@@ -102,6 +105,7 @@ def test_dispatch_unknown_app():
     eq_(server.dispatch_queue(json.dumps({
         "token": token,
         "appid": "unknownApp",
+        "test": True,
         "aps": {
             "alert": "This is test",
             "badge": 1,
@@ -160,3 +164,28 @@ def test_start():
         raise error
     except Empty:
         ok_(True)
+
+
+def test_connect():
+    """
+    待ちうけポートに接続できる事のテスト
+    """
+    def server():
+        server = APNSProxyServer({
+            'BIND_PORT_FOR_ENTRY': 15555,
+            'BIND_PORT_FOR_PULL': 15556,
+            'THREAD_NUMS_PER_APPLICATION': 5,
+            'APPLICATIONS': []
+        })
+        server.start()
+
+    thread = threading.Thread(target=server)
+    thread.setDaemon(True)
+    thread.start()
+
+    socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket1.connect(('localhost', 15555))
+    socket2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket2.connect(('localhost', 15556))
+
+    ok_(True)
