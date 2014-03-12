@@ -3,7 +3,7 @@
 デバイストークンを受けて、APNsに流すサーバー
 
 - Multi-Application Support
-- Use Extended format (Can use expiry and priority)
+- Use Extended format (Can use expiry and priority field)
 - Check automatically error response
 - Check automatically feedback service
 - Native client for Python and more...
