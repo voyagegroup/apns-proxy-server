@@ -1,6 +1,6 @@
 # APNS Proxy Server
 
-デバイストークンを受けて、APNsに流すサーバー
+デバイストークンを受けて、Apple Push Notification Serviceに流すサーバー
 
 [![Build Status](https://travis-ci.org/genesix/apns-proxy-server.png?branch=master)](https://travis-ci.org/genesix/apns-proxy-server)
 
