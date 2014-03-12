@@ -29,25 +29,28 @@ class APNSProxyServer(object):
     """
 
     def __init__(self, settings):
-        self.settings = settings
+        self.port_for_rep = settings['BIND_PORT_FOR_ENTRY']
+        self.port_for_pull = settings['BIND_PORT_FOR_PULL']
+        self.app_config = settings['APPLICATIONS']
+        self.thread_nums_per_app = settings['THREAD_NUMS_PER_APPLICATION']
         self.task_queues = {}
 
     def start(self):
         logging.info('Start server.')
         self.create_workers(
-            self.settings.APPLICATIONS,
-            self.settings.THREAD_NUMS_PER_APPLICATION
+            self.app_config,
+            self.thread_nums_per_app
         )
 
-        logging.info('Use port %s' % self.settings.BIND_PORT_FOR_ENTRY)
-        logging.info('Use port %s' % self.settings.BIND_PORT_FOR_PULL)
+        logging.info('Use port %s' % self.port_for_rep)
+        logging.info('Use port %s' % self.port_for_pull)
 
         context = zmq.Context()
         rep_server = context.socket(zmq.REP)
-        rep_server.bind("tcp://*:" + str(self.settings.BIND_PORT_FOR_ENTRY))
+        rep_server.bind("tcp://*:" + str(self.port_for_rep))
 
         pull_server = context.socket(zmq.PULL)
-        pull_server.bind("tcp://*:" + str(self.settings.BIND_PORT_FOR_PULL))
+        pull_server.bind("tcp://*:" + str(self.port_for_pull))
 
         poller = zmq.Poller()
         poller.register(rep_server, zmq.POLLIN)
@@ -74,7 +77,7 @@ class APNSProxyServer(object):
     def process_message(self, message):
         command = message[:1]
         if command == COMMAND_ASK_ADDRESS:
-            return str(self.settings.BIND_PORT_FOR_PULL)
+            return str(self.port_for_pull)
         elif command == COMMAND_SEND:
             self.dispatch_queue(message[1:])
         else:

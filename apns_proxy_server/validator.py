@@ -14,7 +14,7 @@ def validate_settings(settings):
     if not hasattr(settings, 'THREAD_NUMS_PER_APPLICATION'):
         raise ValueError('THREAD_NUMS_PER_APPLICATION not found in settings')
     if not getattr(settings, 'APPLICATIONS', None):
-        raise ValueError('APPLICATION not found in settings')
+        raise ValueError('APPLICATIONS not found in settings')
     for app in settings.APPLICATIONS:
         if not 'application_id' in app:
             raise ValueError('application_id not found in application list')
@@ -28,7 +28,7 @@ def validate_settings(settings):
             raise ValueError('key_file not found in application list')
         path_to_abspath(app)
         check_file_exists(app)
-    return settings
+    return to_dict(settings)
 
 
 def path_to_abspath(app):
@@ -50,3 +50,12 @@ def check_file_exists(app):
 
     if not os.path.isfile(app['key_file']):
         raise IOError('Key file not found: %s' % app['key_file'])
+
+
+def to_dict(module):
+    return {
+        'BIND_PORT_FOR_ENTRY': module.BIND_PORT_FOR_ENTRY,
+        'BIND_PORT_FOR_PULL': module.BIND_PORT_FOR_PULL,
+        'THREAD_NUMS_PER_APPLICATION': module.THREAD_NUMS_PER_APPLICATION,
+        'APPLICATIONS': module.APPLICATIONS
+    }

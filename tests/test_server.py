@@ -7,23 +7,29 @@ import json
 import threading
 from Queue import Queue, Empty
 
-from nose.tools import ok_, eq_, raises
+from nose.tools import ok_, eq_
 
 from apns_proxy_server.server import (
-    COMMAND_ASK_ADDRESS,
-    COMMAND_SEND,
     APNSProxyServer)
+from apns_proxy_server import validator
+
+
+dummy_setting = {
+    'BIND_PORT_FOR_ENTRY': 1000,
+    'BIND_PORT_FOR_PULL': 200,
+    'THREAD_NUMS_PER_APPLICATION': 1,
+    'APPLICATIONS': []
+}
 
 
 def test_instance():
-    import tests.data.valid_settings
-    server = APNSProxyServer(tests.data.valid_settings)
+    server = APNSProxyServer(dummy_setting)
     ok_(server)
     ok_(server.start)
 
 
 def test_create_worker():
-    server = APNSProxyServer({})
+    server = APNSProxyServer(dummy_setting)
     server.create_workers([{
         "application_id": "myApp1",
         "name": "My App1",
@@ -43,7 +49,7 @@ def test_create_worker():
 
 
 def test_dispatch_known_app():
-    server = APNSProxyServer({})
+    server = APNSProxyServer(dummy_setting)
     server.create_workers([{
         "application_id": "myApp1",
         "name": "My App1",
@@ -68,7 +74,7 @@ def test_dispatch_known_app():
             "sound": "default",
             "expiry": None
         }
-    })), True, "Dispatch should be success")
+        })), True, "Dispatch should be success")
 
     eq_(server.dispatch_queue(json.dumps({
         "token": token,
@@ -79,11 +85,11 @@ def test_dispatch_known_app():
             "sound": "default",
             "expiry": None
         }
-    })), True, "Dispatch should be success")
+        })), True, "Dispatch should be success")
 
 
 def test_dispatch_unknown_app():
-    server = APNSProxyServer({})
+    server = APNSProxyServer(dummy_setting)
     server.create_workers([{
         "application_id": "myApp2",
         "name": "My App2",
@@ -102,7 +108,7 @@ def test_dispatch_unknown_app():
             "sound": "default",
             "expiry": None
         }
-    })), False, "Dispatch should be failed of unknown appid")
+        })), False, "Dispatch should be failed of unknown appid")
 
 
 def test_thread_count():
@@ -111,7 +117,7 @@ def test_thread_count():
     """
     before_num = threading.active_count()
 
-    server = APNSProxyServer({})
+    server = APNSProxyServer(dummy_setting)
     server.create_workers([{
         "application_id": "myApp1",
         "name": "My App1",
@@ -130,6 +136,7 @@ def test_thread_count():
 
     eq_(before_num + 6, after_num)
 
+
 def test_start():
     """
     サーバーが起動できる事のテスト
@@ -137,13 +144,14 @@ def test_start():
     def server(error_queue):
         try:
             import tests.data.valid_settings
-            server = APNSProxyServer(tests.data.valid_settings)
+            s = validator.validate_settings(tests.data.valid_settings)
+            server = APNSProxyServer(s)
             server.start()
         except Exception, e:
             error_queue.put(e)
 
     q = Queue()
-    thread = threading.Thread(target=server,args=(q,))
+    thread = threading.Thread(target=server, args=(q,))
     thread.setDaemon(True)
     thread.start()
 

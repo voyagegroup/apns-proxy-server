@@ -53,7 +53,7 @@ def test_valid_settings():
 
 def test_path_changed_abs_path():
     s = validator.validate_settings(tests.data.valid_settings)
-    for app in s.APPLICATIONS:
+    for app in s['APPLICATIONS']:
         eq_(True, os.path.isabs(app.get('cert_file')))
         eq_(True, os.path.isabs(app.get('key_file')))
 
