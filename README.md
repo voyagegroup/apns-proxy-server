@@ -4,11 +4,19 @@
 
 [![Build Status](https://travis-ci.org/genesix/apns-proxy-server.png?branch=master)](https://travis-ci.org/genesix/apns-proxy-server)
 
+### Features
+
 - Multi-Application Support
 - Use Extended format (Can use expiry and priority field)
-- Check error response
+- Check error response automatically
 - Check feedback service
-- Native client for Python and more...
+- Client library for Python and more...
+- High speed client server data transfer by ZMQ socket.
+
+### Handlign Error Responses
+
+送信500件毎、もしくは送信キューが空になった時点でAPNSのエラーレスポンスをチェックする。
+エラーレスポンスが存在した場合、該当データ以後の物を自動で再送する。
 
 ## Requirements
 
