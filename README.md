@@ -1,6 +1,6 @@
-# APNS Proxy Server
+# APNs Proxy Server
 
-デバイストークンを受けて、Apple Push Notification Serviceに流すサーバー
+デバイストークンを受けて、Apple Push Notification serviceに流すサーバー
 
 [![Build Status](https://travis-ci.org/genesix/apns-proxy-server.png?branch=master)](https://travis-ci.org/genesix/apns-proxy-server)
 
@@ -15,8 +15,9 @@
 
 ### Handling Error Responses
 
-送信500件毎、もしくは送信キューが空になった時点でAPNSのエラーレスポンスをチェックする。
-エラーレスポンスが存在した場合、該当データ以後の物を自動で再送する。
+送信500件毎、もしくは送信キューが空になった時点でAPNsのエラーレスポンスをチェックする。
+不正なデバイストークンが混入した事による、コネクションロストに対応するため。
+エラーレスポンスが存在した場合、APNsに再接続して該当データ以後の物を自動で再送する。
 
 ## Requirements
 
