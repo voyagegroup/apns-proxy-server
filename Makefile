@@ -25,6 +25,10 @@ clean:
 
 setup_prod:
 	virtualenv . --no-site-packages
+	./bin/pip install -r requirements_prod.txt
+
+setup_prod_with_wheels:
+	virtualenv . --no-site-packages
 	./bin/pip install --upgrade pip
 	./bin/pip install --upgrade setuptools
 	./bin/pip install wheel

@@ -26,19 +26,19 @@
 ## Setup
 
 ```
-# APNsへの接続に利用するSSL証明書の配置
+# Puts ssl certs for APNs
 cp xxxxx.certs ./certifications/
 cp xxxxx.key ./certifications/
 
-# 設定ファイルの作成
+# Make your settings by settings.template.py
 cp settings.template.py settings.py
 vim settings.py
 
-# Python環境の構築
-make setup
+# Setup python environment using requirements_prod.txt
+make setup_prod
 ```
 
-## 起動
+## Launch
 
 ```
 apns-proxy-server.sh start
