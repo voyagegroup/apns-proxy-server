@@ -57,3 +57,6 @@ make lint | Check coding style using flake8
 make test | Run Tests
 make run | Run server
 
+## License
+
+BSD
