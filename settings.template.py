@@ -24,7 +24,7 @@ APPLICATIONS = [
         "application_id": "13",
         "name": "My App2",
         "sandbox": False,
-        "cert_file": "/path/to/certs/apns.cert",
+        "cert_file": "/path/to/certs/apns.cert",  # Or use absolute path
         "key_file": "/path/to/certs/apns.key"
     }
 ]
