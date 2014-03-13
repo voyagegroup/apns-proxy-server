@@ -13,7 +13,7 @@
 - Client library for Python and more...
 - High speed client server data transfer by ZMQ socket.
 
-### Handlign Error Responses
+### Handling Error Responses
 
 送信500件毎、もしくは送信キューが空になった時点でAPNSのエラーレスポンスをチェックする。
 エラーレスポンスが存在した場合、該当データ以後の物を自動で再送する。
@@ -47,11 +47,11 @@ apns-proxy-server.sh start
 
 Please see [client repository](https://github.com/genesix/apns-proxy-client-py) or examples folder.
 
-## 開発用のコマンド
+## Dev Commands
 
 Command | Description
 --- | ---
-make setup | Setup python environment
+make setup | Setup python environment for development
 make lint | Check coding style using flake8
 make test | Run Tests
 make run | Run server
