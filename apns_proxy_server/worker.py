@@ -9,7 +9,7 @@ import traceback
 from binascii import b2a_hex
 from struct import unpack
 
-from apns import APNs, Payload, Frame
+from apns import APNs, Payload, PayloadAlert, Frame
 
 
 class APNsError(Exception):
@@ -139,6 +139,9 @@ class SendWorkerThread(threading.Thread):
                      alert=None, sound=None, badge=None, custom={}, content_available=False):
         payload = Payload(alert=alert, sound=sound, badge=badge, custom=custom,
                           content_available=content_available)
+
+        if isinstance(alert, dict):
+            alert = PayloadAlert(**alert)
         if expiry is None:
             expiry = int(time.time()) + (60 * 60)  # 1 hour
         frame = Frame()
