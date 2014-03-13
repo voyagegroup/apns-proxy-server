@@ -106,7 +106,7 @@ class SendWorkerThread(threading.Thread):
         #logging.debug("%s %s" % (self.name, item))
         self.count += 1
         self.store_item(self.count, item)
-        self.send(item['token'], item.get('aps'), item.get('test'))
+        self.send(**item)
         self.error_check()
 
     def store_item(self, idx, item):
@@ -114,12 +114,13 @@ class SendWorkerThread(threading.Thread):
         if idx > self.KEEP_SENDED_ITEMS_NUM:
             self.recent_sended.pop(idx - self.KEEP_SENDED_ITEMS_NUM)
 
-    def send(self, token, aps, test=False):
+    def send(self, appid, token, aps, expiry=None, priority=10, test=False):
         if test is True:
             return
         logging.debug('Send %s' % token)
+        logging.debug(aps)
         self.apns.gateway_server.send_notification_multiple(
-            self.create_frame(token, self.count, **aps)
+            self.create_frame(token, self.count, expiry, priority, **aps)
         )
 
     def retry_last_one(self):
@@ -134,9 +135,10 @@ class SendWorkerThread(threading.Thread):
             self.task_queue.put(self.recent_sended[idx])
             idx += 1
 
-    def create_frame(self, token, identifier, alert, sound, badge, expiry):
-        payload = Payload(alert=alert, sound=sound, badge=badge)
-        priority = 10
+    def create_frame(self, token, identifier, expiry, priority,
+                     alert=None, sound=None, badge=None, custom={}, content_available=False):
+        payload = Payload(alert=alert, sound=sound, badge=badge, custom=custom,
+                          content_available=content_available)
         if expiry is None:
             expiry = int(time.time()) + (60 * 60)  # 1 hour
         frame = Frame()

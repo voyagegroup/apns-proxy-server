@@ -73,9 +73,9 @@ def test_dispatch_known_app():
         "aps": {
             "alert": "This is test",
             "badge": 1,
-            "sound": "default",
-            "expiry": None
-        }
+            "sound": "default"
+        },
+        "expiry": None
         })), True, "Dispatch should be success")
 
     eq_(server.dispatch_queue(json.dumps({
@@ -86,8 +86,8 @@ def test_dispatch_known_app():
             "alert": "This is test",
             "badge": 1,
             "sound": "default",
-            "expiry": None
-        }
+        },
+        "expiry": None
         })), True, "Dispatch should be success")
 
 
@@ -109,10 +109,41 @@ def test_dispatch_unknown_app():
         "aps": {
             "alert": "This is test",
             "badge": 1,
-            "sound": "default",
-            "expiry": None
-        }
+            "sound": "default"
+        },
+        "expiry": None
         })), False, "Dispatch should be failed of unknown appid")
+
+
+def test_dispatch_messages():
+    server = APNSProxyServer(dummy_setting)
+    server.create_workers([{
+        "application_id": "myApp2",
+        "name": "My App2",
+        "sandbox": False,
+        "cert_file": "sample.cert",
+        "key_file": "sample.key"
+    }], 1)
+
+    token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    eq_(server.dispatch_queue(json.dumps({
+        "token": token,
+        "appid": "myApp2",
+        "aps": {
+            "content_available": True
+        },
+        "test": True
+        })), True)
+    eq_(server.dispatch_queue(json.dumps({
+        "token": token,
+        "appid": "myApp2",
+        "aps": {
+            "sound": None,
+            "badge": 99
+        },
+        "priority": 5,
+        "test": True
+        })), True)
 
 
 def test_thread_count():
