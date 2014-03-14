@@ -1,10 +1,7 @@
 git+git://github.com/djacobs/PyAPNs.git
-git+git://github.com/genesix/apns-proxy-client-py.git
-flake8==2.1.0
+git+git://github.com/voyagegroup/apns-proxy-client-py.git
 mccabe==0.2.1
 nose==1.3.0
-pep8==1.4.6
-pyflakes==0.7.3
 pyzmq==14.0.1
 simplejson==3.3.3
 wsgiref==0.1.2

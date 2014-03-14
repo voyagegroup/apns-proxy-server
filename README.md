@@ -2,7 +2,7 @@
 
 デバイストークンを受けて、Apple Push Notification serviceに流すサーバー
 
-[![Build Status](https://travis-ci.org/genesix/apns-proxy-server.png?branch=master)](https://travis-ci.org/genesix/apns-proxy-server)
+[![Build Status](https://travis-ci.org/voyagegroup/apns-proxy-server.png?branch=master)](https://travis-ci.org/voyagegroup/apns-proxy-server)
 
 ### Features
 
@@ -46,7 +46,7 @@ apns-proxy-server.sh start
 
 ## How to use
 
-Please see [client repository](https://github.com/genesix/apns-proxy-client-py) or examples folder.
+Please see [client repository](https://github.com/voyagegroup/apns-proxy-client-py) or examples folder.
 
 ## Dev Commands
 
