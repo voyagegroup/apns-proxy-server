@@ -17,8 +17,8 @@ APPLICATIONS = [
         "application_id": "14",
         "name": "My App1",
         "sandbox": False,
-        "cert_file": "hoge.cert",  # Put in the ./apns_certs directory
-        "key_file": "fuga.key"     # Put in the ./apns_certs direcotry
+        "cert_file": "sample.cert",  # Put in the ./apns_certs directory
+        "key_file": "sample.key"     # Put in the ./apns_certs direcotry
     },
     {
         "application_id": "13",
