@@ -9,9 +9,12 @@
 - Multi-Application Support
 - Use Extended format (Can use expiry and priority field)
 - Check error response automatically
-- Check feedback service
 - Client library for Python and more...
 - Keep TCP connection while sending payloads for speed.
+
+### Under development
+
+- Check feedback service
 
 ### Handling Error Responses
 
