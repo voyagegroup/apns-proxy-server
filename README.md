@@ -11,7 +11,7 @@
 - Check error response automatically
 - Check feedback service
 - Client library for Python and more...
-- High speed client server data transfer by ZMQ socket.
+- Keep TCP connection while sending payloads for speed.
 
 ### Handling Error Responses
 
