@@ -4,6 +4,10 @@ help:
 	@echo "Please [make setup] first."
 	@echo "After python environment created, activate local python by [source ./python/bin/activate]"
 
+############################################################
+# For Development
+############################################################
+
 setup_dev:
 	virtualenv . --no-site-packages
 	./bin/pip install -r requirements_dev.txt
@@ -23,6 +27,11 @@ clean:
 	-rm tests/**/*.pyc
 	-rm settings.pyc
 
+
+############################################################
+# For Production or Deployment
+############################################################
+
 setup_prod:
 	virtualenv . --no-site-packages
 	./bin/pip install -r requirements_prod.txt
@@ -35,7 +44,6 @@ setup_prod_with_wheels:
 	./bin/pip install --no-deps wheelhouse/*
 
 create_wheels:
-	virtualenv . --no-site-packages
 	-mkdir wheelhouse
 	-rm wheelhouse/*
 	./bin/pip install --upgrade pip
