@@ -29,16 +29,19 @@
 ## Setup
 
 ```
-# Puts ssl certs for APNs
+git clone git@github.com:voyagegroup/apns-proxy-server.git
+cd apns-proxy-server
+
+# Setup python environment using requirements_prod.txt (@see Makefile)
+make setup_prod
+
+# Puts your ssl certs for APNs
 cp xxxxx.certs ./certifications/
 cp xxxxx.key ./certifications/
 
 # Make your settings by settings.template.py
 cp settings.template.py settings.py
 vim settings.py
-
-# Setup python environment using requirements_prod.txt
-make setup_prod
 ```
 
 ## Launch
