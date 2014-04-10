@@ -10,7 +10,7 @@
 - Use Extended format (Can use expiry and priority field)
 - Check error response automatically
 - Client library for Python and more...
-- Keep TCP connection while sending payloads for speed.
+- Keep TCP connection while sending payloads for performance.
 
 ### Under development
 
