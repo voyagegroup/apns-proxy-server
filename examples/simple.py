@@ -8,7 +8,7 @@ valid_token = "YOUR VALID TOKEN"
 
 
 def main():
-    client = APNSProxyClient(host="localhost", port=5556, application_id="14")
+    client = APNSProxyClient(host="localhost", port=5556, application_id="myapp")
     i = 0
 
     with client:
