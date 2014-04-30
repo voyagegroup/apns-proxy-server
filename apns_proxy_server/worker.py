@@ -3,6 +3,7 @@
 import logging
 import Queue
 import socket
+import ssl
 import time
 import threading
 import traceback
@@ -89,6 +90,10 @@ class SendWorkerThread(threading.Thread):
                     self.main()
             except Queue.Empty:
                 pass
+            except ssl.SSLError, ssle:
+                # Invalid pem file. Kill this thread
+                logging.error(ssle)
+                raise ssle
             except socket.error, e:
                 logging.warn(e)
                 logging.warn(traceback.format_exc())
