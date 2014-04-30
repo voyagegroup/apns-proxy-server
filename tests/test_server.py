@@ -6,6 +6,7 @@ serverモジュールのテスト
 import json
 import socket
 import threading
+import time
 from Queue import Queue, Empty
 
 from nose.tools import ok_, eq_
@@ -213,6 +214,8 @@ def test_connect():
     thread = threading.Thread(target=server)
     thread.setDaemon(True)
     thread.start()
+
+    time.sleep(1)
 
     socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket1.connect(('localhost', 15555))
