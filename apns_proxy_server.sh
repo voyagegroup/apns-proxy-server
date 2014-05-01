@@ -2,6 +2,8 @@
 
 app=`basename $0`
 pid=`dirname $0`/run/apns_proxy_server.pid
+APNS_PROXY_CRONOLOG_PATH=${APNS_PROXY_CRONOLOG_PATH:-/usr/sbin/cronolog}
+APNS_PROXY_LOG_PATH=${APNS_PROXY_LOG_PATH:-/var/log/app_tmp/apns-proxy-server/%Y/%m/%d/apns_proxy.log}
 
 
 start() {
@@ -11,7 +13,7 @@ start() {
     fi
 
     cd `dirname $0`
-    exec 8> >(/usr/sbin/cronolog -w /var/log/app_tmp/apns-proxy-server/%Y/%m/%d/apns_proxy.log)
+    exec 8> >($APNS_PROXY_CRONOLOG_PATH -w $APNS_PROXY_LOG_PATH)
     ./bin/python -m apns_proxy_server.invoker 2>&8 1>&8 &
 
     mkdir -p `dirname $pid`
