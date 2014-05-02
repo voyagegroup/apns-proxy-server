@@ -24,35 +24,41 @@ def test_create_instance():
     ok_(SendWorkerThread(**dummy_setting))
 
 
-def test_create_frame():
+def test_add_frame():
     worker = SendWorkerThread(**dummy_setting)
-    frame = worker.create_frame(dummy_token, 1, expiry=None, priority=10, alert='Hello')
-    ok_(isinstance(frame, Frame))
+    frame = Frame()
+    ok_(len(frame.frame_data) == 0)
+    worker._add_frame_item(frame, dummy_token, 1, expiry=None, priority=10, alert='Hello')
+    ok_(len(frame.frame_data) > 0)
 
 
 def test_create_frame_with_full_args():
     worker = SendWorkerThread(**dummy_setting)
-    frame = worker.create_frame(dummy_token, 1, expiry=None, priority=10,
-                                alert='Hello',
-                                sound='default',
-                                badge=99,
-                                custom={
-                                    'foo': 'bar'
-                                },
-                                content_available=True)
-    ok_(isinstance(frame, Frame))
+    frame = Frame()
+    worker._add_frame_item(frame, dummy_token, 1,
+                           expiry=None,
+                           priority=10,
+                           alert='Hello',
+                           sound='default',
+                           badge=99,
+                           custom={
+                               'foo': 'bar'
+                           },
+                           content_available=True)
+    ok_(len(frame.frame_data) > 0)
 
 
 @raises(PayloadTooLargeError)
 def test_create_frame_with_too_large_content():
     worker = SendWorkerThread(**dummy_setting)
-    worker.create_frame(dummy_token, 1, expiry=None, priority=10,
-                        alert='This is too large messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                        sound='default',
-                        badge=99,
-                        custom={
-                            'foo': 'foooooooooooooooooooooooooooooooooooooooooooooooo',
-                            'bar': 'barrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
-                            'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
-                        },
-                        content_available=True)
+    frame = Frame()
+    worker._add_frame_item(frame, dummy_token, 1, expiry=None, priority=10,
+                           alert='This is too large messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                           sound='default',
+                           badge=99,
+                           custom={
+                               'foo': 'foooooooooooooooooooooooooooooooooooooooooooooooo',
+                               'bar': 'barrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
+                               'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
+                           },
+                           content_available=True)
