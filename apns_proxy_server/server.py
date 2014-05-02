@@ -18,13 +18,13 @@ class APNSProxyServer(object):
     """
     APNs Proxy Server
 
-    This server use 2 ports
+    This server uses 2 ports
 
     1. ZMQ REQ-REP Connection
     For request and reply process. (Synchronous)
 
     2. ZMQ PUSH-PULL Connection
-    For stream process. Server doesn't response.
+    For stream process. Server doesn't respond.
     """
 
     def __init__(self, settings):

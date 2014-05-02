@@ -49,7 +49,7 @@ class SendWorkerThread(threading.Thread):
 
     # Number of to keep sended item
     # It is necessary to hold for a while after sending to retry.
-    # Becuse error response will become asynchronously
+    # Because error response will become asynchronously
     KEEP_SENDED_ITEMS_NUM = 2000
 
     # Task queue timeout to clear connection (sec)
@@ -98,7 +98,7 @@ class SendWorkerThread(threading.Thread):
                 logging.warn(e)
                 logging.warn(traceback.format_exc())
                 # Some errors
-                # (1) Connection lost by seinding invalid token
+                # (1) Connection lost by sending invalid token
                 #     Disconnect from remote server before self.error_check() called.
                 # (2) Connection lost by too long connection
                 # We cannot know which item was invalid. So retry last one.
@@ -137,7 +137,7 @@ class SendWorkerThread(threading.Thread):
 
     def retry_from(self, start_token_idx):
         """
-        Retry itmes.
+        Retry items.
         Add task queue from stored item.
         """
         idx = start_token_idx
