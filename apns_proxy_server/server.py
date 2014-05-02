@@ -18,14 +18,13 @@ class APNSProxyServer(object):
     """
     APNs Proxy Server
 
-    サーバーは2つのポートを利用する。
+    This server uses 2 ports
 
     1. ZMQ REQ-REP Connection
-    REQ-REP接続は、応答が必要な処理に利用する。これは同期処理になる。
+    For request and reply process. (Synchronous)
 
     2. ZMQ PUSH-PULL Connection
-    PUSH-PULL接続は、ストリーム処理に利用する。サーバーは応答を返さない。
-    Push通知の内容はPULL Socketで受ける。
+    For stream process. Server doesn't respond.
     """
 
     def __init__(self, settings):
@@ -85,7 +84,7 @@ class APNSProxyServer(object):
 
     def dispatch_queue(self, message):
         """
-        ワーカーにデータを渡す
+        Pass to the worker through the queue.
         """
         data = self.parse_message(message)
         application_id = data.get('appid')
@@ -98,13 +97,13 @@ class APNSProxyServer(object):
 
     def parse_message(self, message):
         """
-        データフレームから各値を取り出す
+        Parse data from message
         """
         return json.loads(message)
 
     def create_workers(self, applications, nums_per_apps):
         """
-        ワーカースレッドと、ワーカーとやりとりをするタスクキューの生成
+        Create worker thread and queue.
         """
         for app in applications:
             task_queue = Queue()
@@ -114,7 +113,7 @@ class APNSProxyServer(object):
 
     def create_worker(self, app_config, task_queue, sub_no):
         """
-        スレッドの生成
+        Create worker thread
         """
         thread_name = "SendWorker:%s_%i" % (app_config['name'], sub_no)
         thread = worker.SendWorkerThread(

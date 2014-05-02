@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-serverモジュールのテスト
+Tests for apns_proxy_server.server
 """
 
 import json
