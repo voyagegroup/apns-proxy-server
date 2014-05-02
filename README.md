@@ -1,6 +1,6 @@
 # APNs Proxy Server
 
-デバイストークンを受けて、Apple Push Notification serviceに流すサーバー
+Proxy server for Apple Push Notification service.
 
 [![Build Status](https://travis-ci.org/voyagegroup/apns-proxy-server.png?branch=master)](https://travis-ci.org/voyagegroup/apns-proxy-server)
 
@@ -18,9 +18,8 @@
 
 ### Handling Error Responses
 
-送信500件毎、もしくは送信キューが空になった時点でAPNsのエラーレスポンスをチェックする。
-不正なデバイストークンが混入した事によるコネクションロストに対応するため。
-エラーレスポンスが存在した場合、APNsに再接続して該当データ以後の物を自動で再送する。
+Read error response when sending queue become empty or each 500 items.
+If error response found, re-connect to APNs and retry after the invalid item.
 
 ## Requirements
 
