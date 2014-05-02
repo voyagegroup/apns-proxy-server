@@ -108,7 +108,6 @@ class SendWorkerThread(threading.Thread):
 
     def main(self):
         item = self.task_queue.get(True, self.TASK_QUEUE_TIMEOUT)
-        #logging.debug("%s %s" % (self.name, item))
         self.count += 1
         self.store_item(self.count, item)
         self.send(**item)
