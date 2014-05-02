@@ -2,9 +2,9 @@
 """
 Tests for worker
 """
-from Queue import Queue, Empty
+from Queue import Queue
 
-from nose.tools import ok_, eq_, raises
+from nose.tools import ok_, raises
 from apns import Frame, PayloadTooLargeError
 
 from apns_proxy_server.worker import SendWorkerThread
@@ -46,13 +46,13 @@ def test_create_frame_with_full_args():
 @raises(PayloadTooLargeError)
 def test_create_frame_with_too_large_content():
     worker = SendWorkerThread(**dummy_setting)
-    frame = worker.create_frame(dummy_token, 1, expiry=None, priority=10,
-                                alert='This is too large messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                                sound='default',
-                                badge=99,
-                                custom={
-                                    'foo': 'foooooooooooooooooooooooooooooooooooooooooooooooo',
-                                    'bar': 'barrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
-                                    'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
-                                },
-                                content_available=True)
+    worker.create_frame(dummy_token, 1, expiry=None, priority=10,
+                        alert='This is too large messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+                        sound='default',
+                        badge=99,
+                        custom={
+                            'foo': 'foooooooooooooooooooooooooooooooooooooooooooooooo',
+                            'bar': 'barrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
+                            'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
+                        },
+                        content_available=True)
