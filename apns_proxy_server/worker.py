@@ -147,11 +147,14 @@ class SendWorkerThread(threading.Thread):
 
     def create_frame(self, token, identifier, expiry, priority,
                      alert=None, sound=None, badge=None, custom={}, content_available=False):
-        payload = Payload(alert=alert, sound=sound, badge=badge, custom=custom,
-                          content_available=content_available)
-
         if isinstance(alert, dict):
             alert = PayloadAlert(**alert)
+        payload = Payload(alert=alert,
+                          sound=sound,
+                          badge=badge,
+                          custom=custom,
+                          content_available=content_available)
+
         if expiry is None:
             expiry = int(time.time()) + (60 * 60)  # 1 hour
         frame = Frame()
