@@ -15,28 +15,28 @@ from apns import APNs, Payload, PayloadAlert, Frame, PayloadTooLargeError
 
 class APNsError(Exception):
     """
-    Apple Push Notificationサービスからのエラーレスポンスを表現する例外クラス
+    Representation of error from APNs error response.
     --------------------------
-    ステータスコード
+    Status Code
     --------------------------
-      0 エラーなし
-      1 処理エラー
-      2 デバイストークン欠如
-      3 トピック欠如
-      4 ペイロード欠如
-      5 無効なトークンサイズ
-      6 無効なトピックサイズ
-      7 無効なペイロードサイズ
-      8 無効なトークン
-     10 シャットダウン
-    255 なし(不明)
+      0 No errors encountered
+      1 Processing error
+      2 Missing device token
+      3 Missing topic
+      4 Missing payload
+      5 Invalid token size
+      6 Invalid topic size
+      7 Invalid payload size
+      8 Invalid token
+     10 Shutdown
+    255 None (unknown)
     --------------------------
     @see https://developer.apple.com/jp/devcenter/ios/library/documentation/RemoteNotificationsPG.pdf
     """
     def __init__(self, status_code, token_idx):
         self.status_code = status_code
         self.token_idx = token_idx
-        self.msg = 'Invalid token found. Status: %s' % status_code
+        self.msg = 'Invalid frame found. Status: %s' % status_code
 
     def __str__(self):
         return self.msg
@@ -44,15 +44,15 @@ class APNsError(Exception):
 
 class SendWorkerThread(threading.Thread):
     """
-    APNs送信用のワーカースレッド
+    Worker thread
     """
 
-    # 送信済みのアイテムを保持する数
-    # APNsからはエラーが非同期で得られるのでリトライ用に送信後しばらくは保持しておく必要がある
+    # Number of to keep sended item
+    # It is necessary to hold for a while after sending to retry.
+    # Becuse error response will become asynchronously
     KEEP_SENDED_ITEMS_NUM = 2000
 
-    # タスクキューのタイムアウト (sec)
-    # 暇な時はリモートサーバーとの接続を切っておくのに使う
+    # Task queue timeout to clear connection (sec)
     TASK_QUEUE_TIMEOUT = 5 * 60  # 5min
 
     def __init__(self, task_queue, name, use_sandbox, cert_file, key_file):
@@ -97,11 +97,11 @@ class SendWorkerThread(threading.Thread):
             except socket.error, e:
                 logging.warn(e)
                 logging.warn(traceback.format_exc())
-                # 考えられるエラー
-                # (1) 不正なトークンを送ったことにより、接続を切られた
-                #     (self.error_checkでエラーを確認してこちらから切るよりも先に切られた)
-                # (2) コネクションを長く張りすぎた事により、接続を切られた
-                # どちらにしろ、どこまで送信成功したか判断できないので最後の一個だけリトライする
+                # Some errors
+                # (1) Connection lost by seinding invalid token
+                #     Disconnect from remote server before self.error_check() called.
+                # (2) Connection lost by too long connection
+                # We cannot know which item was invalid. So retry last one.
                 self.retry_last_one()
             finally:
                 self.clear_connection()
@@ -137,7 +137,8 @@ class SendWorkerThread(threading.Thread):
 
     def retry_from(self, start_token_idx):
         """
-        リトライするために、タスクキューにアイテムを追加する
+        Retry itmes.
+        Add task queue from stored item.
         """
         idx = start_token_idx
         while idx <= self.count:
@@ -167,24 +168,22 @@ class SendWorkerThread(threading.Thread):
                 self.check_apns_error_response()
             except APNsError, ape:
                 logging.warn(ape.msg)
-                # 不正なトークン、リモートサーバーからは接続が切られるので、再接続する
+                # Error response found. Current connection will lost.
                 self.clear_connection()
                 if ape.token_idx in self.recent_sended:
-                    # 不正なトークン以降に送った物は、送信できていないので再送する
+                    # Retry items after invalid frame
                     logging.warn("Invalid token found %s", self.recent_sended[ape.token_idx]['token'])
                     self.retry_from(ape.token_idx + 1)
                 else:
-                    # recent_sendedから消した過去のtokenがエラーとして得られた場合
-                    # どうにもできない
+                    # Cannot retry
                     pass
 
     def check_apns_error_response(self):
         """
-        APNsのエラーレスポンスをチェックする
-        エラーが無い時はタイムアウトする
+        Check error response.
+        Use blocking socket.read() and timeout when no response.
 
-        TODO
-        ここにあるのも違和感なので、PyAPNSに追加してPullRequestを送る。
+        This is experimentally workaround.
         """
         if self.apns.gateway_server._socket is None:
             return

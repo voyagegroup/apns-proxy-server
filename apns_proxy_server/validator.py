@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-設定ファイルを検証するモジュール
+Validate functions for setting file
 """
 
 import os.path

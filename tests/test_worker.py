@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for worker
+Tests for apns_proxy_server.worker
 """
 from Queue import Queue
 
