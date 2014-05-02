@@ -10,7 +10,7 @@ import traceback
 from binascii import b2a_hex
 from struct import unpack
 
-from apns import APNs, Payload, PayloadAlert, Frame
+from apns import APNs, Payload, PayloadAlert, Frame, PayloadTooLargeError
 
 
 class APNsError(Exception):
@@ -120,13 +120,18 @@ class SendWorkerThread(threading.Thread):
             self.recent_sended.pop(idx - self.KEEP_SENDED_ITEMS_NUM)
 
     def send(self, appid, token, aps, expiry=None, priority=10, test=False):
+        try:
+            frame = self.create_frame(token, self.count, expiry, priority, **aps)
+        except PayloadTooLargeError, pe:
+            logging.warn('Too large payload, size:%d. %s' % (pe.payload_size, aps))
+            return
+
         if test is True:
             return
+
         logging.debug('Send %s' % token)
         logging.debug(aps)
-        self.apns.gateway_server.send_notification_multiple(
-            self.create_frame(token, self.count, expiry, priority, **aps)
-        )
+        self.apns.gateway_server.send_notification_multiple(frame)
 
     def retry_last_one(self):
         self.retry_from(self.count)
