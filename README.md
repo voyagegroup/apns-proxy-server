@@ -11,10 +11,7 @@ Proxy server for Apple Push Notification service.
 - Check error response automatically
 - Client library for Python and more...
 - Keep TCP connection while sending payloads for performance.
-
-### Under development
-
-- Check feedback service
+- Read feedback service
 
 ### Handling Error Responses
 
