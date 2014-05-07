@@ -32,7 +32,7 @@ def test_add_frame():
     ok_(len(frame.frame_data) == 0)
     worker._add_frame_item(frame, dummy_token, 1, expiry=None, priority=10, alert='Hello')
 
-    hex_frame = b2a_hex(frame.frame_data)
+    hex_frame = b2a_hex(str(frame.frame_data))
     # Notification command
     eq_('02', hex_frame[0:2])
     # Frame length
