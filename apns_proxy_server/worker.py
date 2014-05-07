@@ -99,7 +99,7 @@ class SendWorkerThread(threading.Thread):
                 logging.error(ssle)
                 raise ssle
             except socket.error, e:
-                logging.warn(e)
+                logging.warn("%s %s", self.name, e)
                 logging.warn(traceback.format_exc())
                 # Some errors
                 # (1) Connection lost by sending invalid token
@@ -135,13 +135,13 @@ class SendWorkerThread(threading.Thread):
             self.check_error()
 
     def add_frame_item(self, frame, appid, token, aps, expiry=None, priority=10, test=False):
-        logging.debug('Add to frame %s' % token)
+        logging.debug('Add to frame %s', token)
         logging.debug(aps)
 
         try:
             payload = self.create_payload(**aps)
         except PayloadTooLargeError, pe:
-            logging.warn('Too large payload, size:%d. %s' % (pe.payload_size, aps))
+            logging.warn('Too large payload, size:%d. %s', pe.payload_size, aps)
             return
 
         if expiry is None:
@@ -188,15 +188,15 @@ class SendWorkerThread(threading.Thread):
 
     def check_error(self):
         try:
-            logging.info('%s Check error response %i' % (self.name, self.count))
+            logging.info('%s Check error response %i', self.name, self.count)
             self.check_apns_error_response()
         except APNsError, ape:
-            logging.warn(ape.msg)
+            logging.warn("%s %s", self.name, ape.msg)
             # Error response found. Current connection will lost.
             self.clear_connection()
             if ape.token_idx in self.recent_sended:
                 # Retry items after invalid frame
-                logging.warn("Invalid token found %s", self.recent_sended[ape.token_idx]['token'])
+                logging.warn("%s Invalid token is %s", self.name, self.recent_sended[ape.token_idx]['token'])
                 self.retry_from(ape.token_idx + 1)
             else:
                 # Cannot retry
