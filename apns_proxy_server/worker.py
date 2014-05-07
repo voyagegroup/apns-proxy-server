@@ -103,7 +103,7 @@ class SendWorkerThread(threading.Thread):
                 logging.warn(traceback.format_exc())
                 # Some errors
                 # (1) Connection lost by sending invalid token
-                #     Disconnect from remote server before self.error_check() called.
+                #     Disconnect from remote server before self.check_error() called.
                 # (2) Connection lost by too long connection
                 # We cannot know which item was invalid. So retry last one.
                 self.retry_last_one()
@@ -132,7 +132,7 @@ class SendWorkerThread(threading.Thread):
 
         if len(frame.frame_data) > 0:
             self.send(frame)
-            self.error_check()
+            self.check_error()
 
     def add_frame_item(self, frame, appid, token, aps, expiry=None, priority=10, test=False):
         if test is True:
@@ -180,7 +180,7 @@ class SendWorkerThread(threading.Thread):
             self.task_queue.put(self.recent_sended[idx])
             idx += 1
 
-    def error_check(self):
+    def check_error(self):
         try:
             logging.info('%s Check error response %i' % (self.name, self.count))
             self.check_apns_error_response()
