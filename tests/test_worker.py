@@ -5,9 +5,10 @@ Tests for apns_proxy_server.worker
 from binascii import b2a_hex
 import mock
 from Queue import Queue
+import time
 
 from nose.tools import ok_, eq_, raises
-from apns import Frame, PayloadTooLargeError
+from apns import Frame, Payload, PayloadTooLargeError
 
 from apns_proxy_server.worker import SendWorkerThread
 
@@ -30,7 +31,7 @@ def test_add_frame():
     worker = SendWorkerThread(**dummy_setting)
     frame = Frame()
     ok_(len(frame.frame_data) == 0)
-    worker._add_frame_item(frame, dummy_token, 1, expiry=None, priority=10, alert='Hello')
+    worker.add_frame_item(frame, 'myapp', dummy_token, {'alert':'hello'}, expiry=None, priority=10)
 
     hex_frame = b2a_hex(str(frame.frame_data))
     # Notification command
@@ -48,33 +49,60 @@ def test_add_frame():
 def test_create_frame_with_full_args():
     worker = SendWorkerThread(**dummy_setting)
     frame = Frame()
-    worker._add_frame_item(frame, dummy_token, 1,
-                           expiry=None,
-                           priority=10,
-                           alert='Hello',
-                           sound='default',
-                           badge=99,
-                           custom={
-                               'foo': 'bar'
-                           },
-                           content_available=True)
+    worker.add_frame_item(
+        frame,
+        'myapp',
+        dummy_token,
+        aps={
+            'alert': 'Hello',
+            'sound': 'default',
+            'badge': 99,
+            'custom': {
+                'foot': 'bar'
+            },
+            'content_available': True
+        },
+        expiry=None,
+        priority=10,
+    )
     ok_(len(frame.frame_data) > 0)
 
 
-@raises(PayloadTooLargeError)
-def test_create_frame_with_too_large_content():
+def test_create_payload():
     worker = SendWorkerThread(**dummy_setting)
-    frame = Frame()
-    worker._add_frame_item(frame, dummy_token, 1, expiry=None, priority=10,
-                           alert='This is too large messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-                           sound='default',
-                           badge=99,
-                           custom={
-                               'foo': 'foooooooooooooooooooooooooooooooooooooooooooooooo',
-                               'bar': 'barrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
-                               'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
-                           },
-                           content_available=True)
+    payload = worker.create_payload(
+        alert='Hello',
+        content_available=True
+    )
+    ok_(isinstance(payload, Payload))
+
+
+def test_create_payload_with_dict_alert():
+    worker = SendWorkerThread(**dummy_setting)
+    payload = worker.create_payload(
+        alert={
+            'body': 'Hello',
+            'action_loc_key': 'loc_key'
+        },
+        content_available=True
+    )
+    ok_(isinstance(payload, Payload))
+
+
+@raises(PayloadTooLargeError)
+def test_create_payload_with_too_large_content():
+    worker = SendWorkerThread(**dummy_setting)
+    worker.create_payload(
+        alert='This is too large messageeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        sound='default',
+        badge=999,
+        custom={
+            'foo': 'foooooooooooooooooooooooooooooooooooooooooooooooo',
+            'bar': 'barrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',
+            'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
+        },
+        content_available=True
+    )
 
 
 def test_send():

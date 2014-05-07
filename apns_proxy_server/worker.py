@@ -135,29 +135,35 @@ class SendWorkerThread(threading.Thread):
             self.check_error()
 
     def add_frame_item(self, frame, appid, token, aps, expiry=None, priority=10, test=False):
-        if test is True:
-            return
+        logging.debug('Add to frame %s' % token)
+        logging.debug(aps)
 
         try:
-            logging.debug('Add to frame %s' % token)
-            logging.debug(aps)
-            self._add_frame_item(frame, token, self.count, expiry, priority, **aps)
+            payload = self.create_payload(**aps)
         except PayloadTooLargeError, pe:
             logging.warn('Too large payload, size:%d. %s' % (pe.payload_size, aps))
-
-    def _add_frame_item(self, frame, token, identifier, expiry, priority,
-                        alert=None, sound=None, badge=None, custom={}, content_available=False):
-        if isinstance(alert, dict):
-            alert = PayloadAlert(**alert)
-        payload = Payload(alert=alert,
-                          sound=sound,
-                          badge=badge,
-                          custom=custom,
-                          content_available=content_available)
+            return
 
         if expiry is None:
             expiry = int(time.time()) + (60 * 60)  # 1 hour
-        frame.add_item(token, payload, identifier, expiry, priority)
+
+        if test is True:
+            return
+
+        frame.add_item(token, payload, self.count, expiry, priority)
+
+    def create_payload(self, alert=None, sound=None, badge=None, custom={}, content_available=False):
+        if isinstance(alert, dict):
+            alert = PayloadAlert(**alert)
+
+        payload = Payload(
+            alert=alert,
+            sound=sound,
+            badge=badge,
+            custom=custom,
+            content_available=content_available
+        )
+        return payload
 
     def send(self, frame):
         self.apns.gateway_server.send_notification_multiple(frame)
