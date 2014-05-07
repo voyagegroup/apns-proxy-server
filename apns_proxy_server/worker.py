@@ -42,6 +42,10 @@ class APNsError(Exception):
         return self.msg
 
 
+class QueueWaitTimeout(Exception):
+    pass
+
+
 class SendWorkerThread(threading.Thread):
     """
     Worker thread
@@ -88,18 +92,18 @@ class SendWorkerThread(threading.Thread):
             try:
                 while True:
                     self.main()
-            except Queue.Empty:
+            except QueueWaitTimeout:
                 pass
             except ssl.SSLError, ssle:
                 # Invalid pem file. Kill this thread
                 logging.error(ssle)
                 raise ssle
             except socket.error, e:
-                logging.warn(e)
+                logging.warn("%s %s", self.name, e)
                 logging.warn(traceback.format_exc())
                 # Some errors
                 # (1) Connection lost by sending invalid token
-                #     Disconnect from remote server before self.error_check() called.
+                #     Disconnect from remote server before self.check_error() called.
                 # (2) Connection lost by too long connection
                 # We cannot know which item was invalid. So retry last one.
                 self.retry_last_one()
@@ -107,30 +111,67 @@ class SendWorkerThread(threading.Thread):
                 self.clear_connection()
 
     def main(self):
-        item = self.task_queue.get(True, self.TASK_QUEUE_TIMEOUT)
-        self.count += 1
-        self.store_item(self.count, item)
-        self.send(**item)
-        self.error_check()
+        frame = Frame()
+        try:
+            item_count = 0
+            while item_count < 500:
+                if item_count == 0:
+                    # First time
+                    # Wait here by blocking get
+                    item = self.task_queue.get(True, self.TASK_QUEUE_TIMEOUT)
+                else:
+                    item = self.task_queue.get(False)
+                item_count += 1
+
+                self.count += 1
+                self.store_item(self.count, item)
+                self.add_frame_item(frame, **item)
+        except Queue.Empty:
+            if item_count == 0:
+                raise QueueWaitTimeout()
+
+        if len(frame.frame_data) > 0:
+            self.send(frame)
+            self.check_error()
+
+    def add_frame_item(self, frame, appid, token, aps, expiry=None, priority=10, test=False):
+        logging.debug('Add to frame %s', token)
+        logging.debug(aps)
+
+        try:
+            payload = self.create_payload(**aps)
+        except PayloadTooLargeError, pe:
+            logging.warn('Too large payload, size:%d. %s', pe.payload_size, aps)
+            return
+
+        if expiry is None:
+            expiry = int(time.time()) + (60 * 60)  # 1 hour
+
+        if test is True:
+            return
+
+        frame.add_item(token, payload, self.count, expiry, priority)
+
+    def create_payload(self, alert=None, sound=None, badge=None, custom={}, content_available=False):
+        if isinstance(alert, dict):
+            alert = PayloadAlert(**alert)
+
+        payload = Payload(
+            alert=alert,
+            sound=sound,
+            badge=badge,
+            custom=custom,
+            content_available=content_available
+        )
+        return payload
+
+    def send(self, frame):
+        self.apns.gateway_server.send_notification_multiple(frame)
 
     def store_item(self, idx, item):
         self.recent_sended[idx] = item
         if idx > self.KEEP_SENDED_ITEMS_NUM:
             self.recent_sended.pop(idx - self.KEEP_SENDED_ITEMS_NUM)
-
-    def send(self, appid, token, aps, expiry=None, priority=10, test=False):
-        try:
-            frame = self.create_frame(token, self.count, expiry, priority, **aps)
-        except PayloadTooLargeError, pe:
-            logging.warn('Too large payload, size:%d. %s' % (pe.payload_size, aps))
-            return
-
-        if test is True:
-            return
-
-        logging.debug('Send %s' % token)
-        logging.debug(aps)
-        self.apns.gateway_server.send_notification_multiple(frame)
 
     def retry_last_one(self):
         self.retry_from(self.count)
@@ -145,38 +186,21 @@ class SendWorkerThread(threading.Thread):
             self.task_queue.put(self.recent_sended[idx])
             idx += 1
 
-    def create_frame(self, token, identifier, expiry, priority,
-                     alert=None, sound=None, badge=None, custom={}, content_available=False):
-        if isinstance(alert, dict):
-            alert = PayloadAlert(**alert)
-        payload = Payload(alert=alert,
-                          sound=sound,
-                          badge=badge,
-                          custom=custom,
-                          content_available=content_available)
-
-        if expiry is None:
-            expiry = int(time.time()) + (60 * 60)  # 1 hour
-        frame = Frame()
-        frame.add_item(token, payload, identifier, expiry, priority)
-        return frame
-
-    def error_check(self):
-        if self.task_queue.empty() or (self.count % 500 == 0):
-            try:
-                logging.debug('%s Check error response %i' % (self.name, self.count))
-                self.check_apns_error_response()
-            except APNsError, ape:
-                logging.warn(ape.msg)
-                # Error response found. Current connection will lost.
-                self.clear_connection()
-                if ape.token_idx in self.recent_sended:
-                    # Retry items after invalid frame
-                    logging.warn("Invalid token found %s", self.recent_sended[ape.token_idx]['token'])
-                    self.retry_from(ape.token_idx + 1)
-                else:
-                    # Cannot retry
-                    pass
+    def check_error(self):
+        try:
+            logging.info('%s Check error response %i', self.name, self.count)
+            self.check_apns_error_response()
+        except APNsError, ape:
+            logging.warn("%s %s", self.name, ape.msg)
+            # Error response found. Current connection will lost.
+            self.clear_connection()
+            if ape.token_idx in self.recent_sended:
+                # Retry items after invalid frame
+                logging.warn("%s Invalid token is %s", self.name, self.recent_sended[ape.token_idx]['token'])
+                self.retry_from(ape.token_idx + 1)
+            else:
+                # Cannot retry
+                pass
 
     def check_apns_error_response(self):
         """
@@ -189,7 +213,7 @@ class SendWorkerThread(threading.Thread):
             return
 
         try:
-            self.apns.gateway_server._socket.settimeout(0.5)
+            self.apns.gateway_server._socket.settimeout(0.6)
             error_bytes = self.apns.gateway_server.read(6)
             if len(error_bytes) < 6:
                 return
