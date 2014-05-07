@@ -3,11 +3,8 @@
 Tests for apns_proxy_server.worker
 """
 from binascii import b2a_hex
-import json
 import mock
 from Queue import Queue
-from struct import unpack
-import time
 
 from nose.tools import ok_, eq_, raises
 from apns import Frame, PayloadTooLargeError
@@ -78,6 +75,7 @@ def test_create_frame_with_too_large_content():
                                'buz': 'buzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz'
                            },
                            content_available=True)
+
 
 def test_send():
     """
