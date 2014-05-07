@@ -7,11 +7,12 @@ import traceback
 import simplejson as json
 import zmq
 
-from . import worker
+from . import feedback, worker
 
 COMMAND_LENGTH = 1
 COMMAND_ASK_ADDRESS = b'\1'
 COMMAND_SEND = b'\2'
+COMMAND_FEEDBACK = b'\3'
 
 
 class APNSProxyServer(object):
@@ -30,7 +31,7 @@ class APNSProxyServer(object):
     def __init__(self, settings):
         self.port_for_rep = settings['BIND_PORT_FOR_ENTRY']
         self.port_for_pull = settings['BIND_PORT_FOR_PULL']
-        self.app_config = settings['APPLICATIONS']
+        self.app_config = dict([(x['application_id'], x) for x in settings['APPLICATIONS']])
         self.thread_nums_per_app = settings['THREAD_NUMS_PER_APPLICATION']
         self.task_queues = {}
 
@@ -79,6 +80,10 @@ class APNSProxyServer(object):
             return str(self.port_for_pull)
         elif command == COMMAND_SEND:
             self.dispatch_queue(message[1:])
+        elif command == COMMAND_FEEDBACK:
+            feedback_proxy = self.get_feedback_proxy(message[1:])
+            if feedback_proxy:
+                return feedback_proxy.get()
         else:
             logging.warn('Unknown command received %s' % command)
 
@@ -95,6 +100,17 @@ class APNSProxyServer(object):
             logging.warn('Unknown application_id received %s' % application_id)
             return False
 
+    def get_feedback_proxy(self, message):
+        data = self.parse_message(message)
+        application_id = data.get('appid')
+
+        if application_id in self.app_config:
+            config = self.app_config[application_id]
+            conn = feedback.FeedbackProxy(config['sandbox'], config['cert_file'], config['key_file'])
+            return conn
+        else:
+            return False
+
     def parse_message(self, message):
         """
         Parse data from message
@@ -105,11 +121,11 @@ class APNSProxyServer(object):
         """
         Create worker thread and queue.
         """
-        for app in applications:
+        for application_id, app in applications.items():
             task_queue = Queue()
             for i in xrange(nums_per_apps):
                 self.create_worker(app, task_queue, i)
-            self.task_queues[app['application_id']] = task_queue
+            self.task_queues[application_id] = task_queue
 
     def create_worker(self, app_config, task_queue, sub_no):
         """

@@ -32,19 +32,22 @@ def test_instance():
 
 def test_create_worker():
     server = APNSProxyServer(dummy_setting)
-    server.create_workers([{
-        "application_id": "myApp1",
-        "name": "My App1",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }, {
-        "application_id": "myApp2",
-        "name": "My App2",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }], 1)
+    server.create_workers({
+        "myApp1": {
+            "application_id": "myApp1",
+            "name": "My App1",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+        "myApp2": {
+            "application_id": "myApp2",
+            "name": "My App2",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+    }, 1)
     eq_(len(server.task_queues), 2)
     for k in server.task_queues.keys():
         ok_(isinstance(server.task_queues[k], Queue))
@@ -52,19 +55,22 @@ def test_create_worker():
 
 def test_dispatch_known_app():
     server = APNSProxyServer(dummy_setting)
-    server.create_workers([{
-        "application_id": "myApp1",
-        "name": "My App1",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }, {
-        "application_id": "myApp2",
-        "name": "My App2",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }], 1)
+    server.create_workers({
+        "myApp1": {
+            "application_id": "myApp1",
+            "name": "My App1",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+        "myApp2": {
+            "application_id": "myApp2",
+            "name": "My App2",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+    }, 1)
 
     token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     eq_(server.dispatch_queue(json.dumps({
@@ -94,13 +100,15 @@ def test_dispatch_known_app():
 
 def test_dispatch_unknown_app():
     server = APNSProxyServer(dummy_setting)
-    server.create_workers([{
-        "application_id": "myApp2",
-        "name": "My App2",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }], 1)
+    server.create_workers({
+        "myApp2": {
+            "application_id": "myApp2",
+            "name": "My App2",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+    }, 1)
 
     token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     eq_(server.dispatch_queue(json.dumps({
@@ -118,13 +126,15 @@ def test_dispatch_unknown_app():
 
 def test_dispatch_messages():
     server = APNSProxyServer(dummy_setting)
-    server.create_workers([{
-        "application_id": "myApp2",
-        "name": "My App2",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }], 1)
+    server.create_workers({
+        "myApp2": {
+            "application_id": "myApp2",
+            "name": "My App2",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+    }, 1)
 
     token = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     eq_(server.dispatch_queue(json.dumps({
@@ -147,6 +157,34 @@ def test_dispatch_messages():
         })), True)
 
 
+def test_get_feedback():
+    server = APNSProxyServer(dummy_setting)
+    server.app_config["myApp1"] = {
+        "application_id": "myApp1",
+        "name": "My App1",
+        "sandbox": True,
+        "cert_file": "sample.cert",
+        "key_file": "sample.key",
+    }
+
+    proxy = server.get_feedback_proxy(json.dumps({
+        "appid": "myApp1",
+    }))
+    ok_(proxy)
+    ok_(proxy.use_sandbox)
+    eq_(proxy.cert_file, "sample.cert")
+    eq_(proxy.key_file, "sample.key")
+
+
+def test_get_feedback_with_unknown_app():
+    server = APNSProxyServer(dummy_setting)
+
+    proxy = server.get_feedback_proxy(json.dumps({
+        "appid": "myApp1",
+    }))
+    ok_(not proxy)
+
+
 def test_thread_count():
     """
     スレッド生成数のテスト
@@ -154,19 +192,22 @@ def test_thread_count():
     before_num = threading.active_count()
 
     server = APNSProxyServer(dummy_setting)
-    server.create_workers([{
-        "application_id": "myApp1",
-        "name": "My App1",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }, {
-        "application_id": "myApp2",
-        "name": "My App2",
-        "sandbox": False,
-        "cert_file": "sample.cert",
-        "key_file": "sample.key"
-    }], 3)
+    server.create_workers({
+        "myApp1": {
+            "application_id": "myApp1",
+            "name": "My App1",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+        "myApp2": {
+            "application_id": "myApp2",
+            "name": "My App2",
+            "sandbox": False,
+            "cert_file": "sample.cert",
+            "key_file": "sample.key"
+        },
+    }, 3)
 
     after_num = threading.active_count()
 
