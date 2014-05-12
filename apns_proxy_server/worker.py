@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import errno
 import logging
 import Queue
 import socket
@@ -96,17 +97,9 @@ class SendWorkerThread(threading.Thread):
                 pass
             except ssl.SSLError, ssle:
                 # Invalid pem file. Kill this thread
-                logging.error(ssle)
-                raise ssle
-            except socket.error, e:
-                logging.warn("%s %s", self.name, e)
-                logging.warn(traceback.format_exc())
-                # Some errors
-                # (1) Connection lost by sending invalid token
-                #     Disconnect from remote server before self.check_error() called.
-                # (2) Connection lost by too long connection
-                # We cannot know which item was invalid. So retry last one.
-                self.retry_last_one()
+                logging.error('%s %s', self.name, ssle)
+                logging.error(traceback.format_exc())
+                raise
             finally:
                 self.clear_connection()
 
@@ -165,16 +158,29 @@ class SendWorkerThread(threading.Thread):
         )
         return payload
 
-    def send(self, frame):
-        self.apns.gateway_server.send_notification_multiple(frame)
+    def send(self, frame, is_retry=False):
+        try:
+            self.apns.gateway_server.send_notification_multiple(frame)
+        except socket.error, e:
+            if e[0] in (errno.EPIPE, errno.EPERM):
+                logging.warn('%s %s. Some frames may lost', self.name, e)
+                # BROKEN PIPE suggests some reasons
+                # (1) Connection lost by sending invalid token
+                #     Disconnected by gateway server before self.check_error() call.
+                # (2) Connection lost by too long connection
+                # We cannot know which item was invalid. So retry only current frames.
+                self.clear_connection()
+                if not is_retry:
+                    # Retry once to prevent infinite loop
+                    logging.info('%s Retry current frames', self.name)
+                    self.send(frame, is_retry=True)
+            else:
+                raise
 
     def store_item(self, idx, item):
         self.recent_sended[idx] = item
         if idx > self.KEEP_SENDED_ITEMS_NUM:
             self.recent_sended.pop(idx - self.KEEP_SENDED_ITEMS_NUM)
-
-    def retry_last_one(self):
-        self.retry_from(self.count)
 
     def retry_from(self, start_token_idx):
         """
