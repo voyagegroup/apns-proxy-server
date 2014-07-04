@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import logging.config
 import traceback
 
 from .server import APNSProxyServer
@@ -7,15 +8,9 @@ from . import validator
 import settings
 
 
-def init_log(level):
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s %(levelname)s %(message)s')
-
-
 def main():
     try:
-        init_log(settings.LOG_LEVEL)
+        logging.config.fileConfig('logging.conf')
         s = validator.validate_settings(settings)
         server = APNSProxyServer(s)
         server.start()

@@ -41,6 +41,7 @@ nosetests.xml
 
 # Settings
 settings.py
+logging.conf
 apns_certs/*
 !apns_certs/.gitkeep
 # For unit test
