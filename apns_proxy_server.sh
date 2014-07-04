@@ -11,7 +11,7 @@ start() {
     fi
 
     cd `dirname $0`
-    ./bin/python -m apns_proxy_server.invoker
+    ./bin/python -m apns_proxy_server.invoker&
 
     mkdir -p `dirname $pid`
     echo $! > $pid
