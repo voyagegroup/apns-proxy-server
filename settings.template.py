@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# クライアントを待ちうけるポート
+# Listen ports
 BIND_PORT_FOR_ENTRY = 5556
 BIND_PORT_FOR_PULL = 5557
 
-# アプリ毎のワーカースレッドの数
+# Number of threads per application
 THREAD_NUMS_PER_APPLICATION = 5
 
-# アプリ毎のAPNsの設定
+# APNs settings
 APPLICATIONS = [
     {
         "application_id": "14",
