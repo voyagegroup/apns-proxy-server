@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import logging
-
-LOG_LEVEL = logging.INFO
-
 # クライアントを待ちうけるポート
 BIND_PORT_FOR_ENTRY = 5556
 BIND_PORT_FOR_PULL = 5557

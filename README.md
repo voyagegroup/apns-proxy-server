@@ -38,6 +38,10 @@ cp xxxxx.key ./certifications/
 # Make your settings by settings.template.py
 cp settings.template.py settings.py
 vim settings.py
+
+# Make your logging.config by logging.config.template
+cp logging.config.template logging.config
+vim logging.config
 ```
 
 ## Launch
