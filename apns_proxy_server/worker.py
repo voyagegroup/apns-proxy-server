@@ -145,7 +145,7 @@ class SendWorkerThread(threading.Thread):
 
         frame.add_item(token, payload, self.count, expiry, priority)
 
-    def create_payload(self, alert=None, sound=None, badge=None, custom={}, content_available=False):
+    def create_payload(self, alert=None, sound=None, badge=None, category=None, custom={}, content_available=False):
         if isinstance(alert, dict):
             alert = PayloadAlert(**alert)
 
@@ -153,6 +153,7 @@ class SendWorkerThread(threading.Thread):
             alert=alert,
             sound=sound,
             badge=badge,
+            category=category,
             custom=custom,
             content_available=content_available
         )
