@@ -95,11 +95,6 @@ class SendWorkerThread(threading.Thread):
                     self.main()
             except QueueWaitTimeout:
                 pass
-            except ssl.SSLError, ssle:
-                # Invalid pem file. Kill this thread
-                logging.error('%s %s', self.name, ssle)
-                logging.error(traceback.format_exc())
-                raise
             finally:
                 self.clear_connection()
 
@@ -176,7 +171,16 @@ class SendWorkerThread(threading.Thread):
                     logging.info('%s Retry current frames', self.name)
                     self.send(frame, is_retry=True)
             else:
+                logging.error('%s %s', self.name, e)
+                logging.error(traceback.format_exc())
                 raise
+        except ssl.SSLError, ssle:
+            logging.warn('%s %s', self.name, ssle)
+            logging.warn(traceback.format_exc())
+            if not is_retry:
+                # Retry once to prevent infinite loop
+                logging.info('%s Retry current frames', self.name)
+                self.send(frame, is_retry=True)
 
     def store_item(self, idx, item):
         self.recent_sended[idx] = item
