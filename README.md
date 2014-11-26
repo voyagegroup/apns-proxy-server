@@ -21,6 +21,7 @@ If error response found, re-connect to APNs and retry after the invalid item.
 ## Requirements
 
 - Python > 2.6
+- (optional) gcc, gcc-c++, python-devel, uuid-devel, libuuid-devel and git to compile libzmq on CentOS
 
 ## Setup
 
@@ -32,22 +33,22 @@ cd apns-proxy-server
 make setup_prod
 
 # Puts your ssl certs for APNs
-cp xxxxx.certs ./certifications/
-cp xxxxx.key ./certifications/
+cp xxxxx.certs ./apns_certs/
+cp xxxxx.key ./apns_certs/
 
 # Make your settings by settings.template.py
 cp settings.template.py settings.py
 vim settings.py
 
-# Make your logging.config by logging.config.template
-cp logging.config.template logging.config
-vim logging.config
+# Make your logging.conf by logging.conf.template
+cp logging.conf.template logging.conf
+vim logging.conf
 ```
 
 ## Launch
 
 ```
-apns-proxy-server.sh start
+./apns_proxy_server.sh start
 ```
 
 ## How to use
