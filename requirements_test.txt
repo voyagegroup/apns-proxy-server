@@ -1,4 +1,4 @@
-git+git://github.com/djacobs/PyAPNs.git
+git+git://github.com/djacobs/PyAPNs.git@2fa67b0abd42575b52dd2084d79b2d2680937763
 mccabe==0.2.1
 mock==1.0.1
 nose==1.3.0

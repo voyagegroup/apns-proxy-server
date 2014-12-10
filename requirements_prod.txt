@@ -1,4 +1,4 @@
-git+git://github.com/djacobs/PyAPNs.git
+git+git://github.com/djacobs/PyAPNs.git@2fa67b0abd42575b52dd2084d79b2d2680937763
 pyzmq==14.0.1
 wsgiref==0.1.2
 simplejson==3.3.3
